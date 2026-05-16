@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>姿势大全 - 17fei</title>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --primary: #ff6b9d;
+      --primary-dark: #c44569;
+      --accent: #ff8fab;
+      --bg: #fff0f5;
+      --bg-secondary: #ffe4ec;
+      --text: #4a4a4a;
+      --text-light: #8a6c6c;
+      --card: #ffffff;
+      --border: rgba(255,107,157,0.2);
+      --radius: 16px;
+      --radius-sm: 8px;
+      --shadow: 0 4px 20px rgba(255,107,157,0.3);
+      --shadow-hover: 0 8px 30px rgba(255,107,157,0.4);
+      --gradient: linear-gradient(135deg, #ff6b9d, #c44569);
+    }
+
+    body {
+      font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+      padding-bottom: 80px;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    @keyframes scaleIn {
+      from { opacity: 0; transform: scale(0.9); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    /* 导航栏 */
+    .navbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: rgba(255,255,255,0.95);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+      z-index: 100;
+    }
+
+    .navbar-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .back-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text);
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .back-btn:hover {
+      color: var(--primary);
+    }
+
+    .logo {
+      font-weight: 700;
+      font-size: 1.2rem;
+      color: var(--primary);
+    }
+
+    /* 页面头部 */
+    .page-header {
+      padding: 100px 20px 40px;
+      text-align: center;
+      background: var(--gradient);
+      color: white;
+    }
+
+    .page-header h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .page-header p {
+      opacity: 0.9;
+      font-size: 1rem;
+    }
+
+    /* 筛选栏 */
+    .filter-bar {
+      padding: 16px 20px;
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 64px;
+      z-index: 50;
+    }
+
+    .filter-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      gap: 12px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .filter-chip {
+      flex-shrink: 0;
+      padding: 8px 16px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      font-size: 0.9rem;
+      color: var(--text);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .filter-chip:hover {
+      border-color: var(--primary);
+    }
+
+    .filter-chip.active {
+      background: var(--gradient);
+      color: white;
+      border-color: transparent;
+    }
+
+    /* 卡片网格 */
+    .card-section {
+      padding: 24px 20px;
+    }
+
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 16px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .card-item {
+      background: var(--card);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      transition: all 0.3s;
+    }
+
+    .card-item:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-hover);
+    }
+
+    .card-item img {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+      display: block;
+    }
+
+    /* VIP锁定卡片 */
+    .card-item.locked {
+      position: relative;
+    }
+
+    .card-item.locked img {
+      filter: blur(15px) brightness(0.5);
+    }
+
+    .vip-lock {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      text-align: center;
+      padding: 16px;
+    }
+
+    .vip-lock-icon {
+      width: 48px;
+      height: 48px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      margin-bottom: 8px;
+    }
+
+    .vip-lock-text {
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+
+    /* 解锁提示 */
+    .unlock-tip {
+      text-align: center;
+      padding: 24px;
+      max-width: 400px;
+      margin: 0 auto;
+    }
+
+    .unlock-tip-icon {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto 16px;
+      background: var(--gradient);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+    }
+
+    .unlock-tip h3 {
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+
+    .unlock-tip p {
+      color: var(--text-light);
+      font-size: 0.9rem;
+    }
+
+    .unlock-btn {
+      display: inline-block;
+      margin-top: 16px;
+      padding: 12px 32px;
+      background: var(--gradient);
+      border-radius: var(--radius);
+      color: white;
+      text-decoration: none;
+      font-weight: 600;
+      transition: all 0.3s;
+    }
+
+    .unlock-btn:hover {
+      transform: scale(1.05);
+      box-shadow: var(--shadow-hover);
+    }
+
+    /* 底部导航 */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(255,255,255,0.95);
+      backdrop-filter: blur(10px);
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-around;
+      padding: 8px 0;
+      z-index: 100;
+    }
+
+    .bottom-nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      color: var(--text-light);
+      text-decoration: none;
+      font-size: 0.75rem;
+      padding: 4px 12px;
+      transition: color 0.2s;
+    }
+
+    .bottom-nav-item span:first-child {
+      font-size: 1.3rem;
+    }
+
+    .bottom-nav-item.active {
+      color: var(--primary);
+    }
+
+    /* 响应式 */
+    @media (max-width: 768px) {
+      .card-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+      }
+
+      .card-item img {
+        height: 140px;
+      }
+    }
+
+    /* 加载状态 */
+    .loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+      color: var(--text-light);
+    }
+
+    .spinner {
+      width: 32px;
+      height: 32px;
+      border: 3px solid var(--border);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <!-- 导航栏 -->
+    <nav class="navbar">
+      <div class="navbar-inner">
+        <a href="index.html" class="back-btn">
+          <span>←</span>
+          <span>返回</span>
+        </a>
+        <div class="logo">姿势大全</div>
+        <div style="width: 60px;"></div>
+      </div>
+    </nav>
+
+    <!-- 页面头部 -->
+    <header class="page-header">
+      <h1>情趣姿势大全</h1>
+      <p>共 {{ positions.length }} 个姿势</p>
+    </header>
+
+    <!-- 筛选栏 -->
+    <div class="filter-bar">
+      <div class="filter-inner">
+        <div
+          v-for="filter in filters"
+          :key="filter.id"
+          class="filter-chip"
+          :class="{ active: activeFilter === filter.id }"
+          @click="activeFilter = filter.id"
+        >
+          {{ filter.name }}
+        </div>
+      </div>
+    </div>
+
+    <!-- 卡片网格 -->
+    <section class="card-section">
+      <div class="card-grid" v-if="!loading">
+        <div
+          v-for="(pos, index) in filteredPositions"
+          :key="index"
+          class="card-item"
+          :class="{ locked: !isVip && index >= freeCount }"
+        >
+          <img :src="pos" alt="姿势图片">
+          <div class="vip-lock" v-if="!isVip && index >= freeCount">
+            <div class="vip-lock-icon">🔒</div>
+            <div class="vip-lock-text">开通VIP解锁</div>
+          </div>
+        </div>
+      </div>
+      <div class="loading" v-else>
+        <div class="spinner"></div>
+      </div>
+
+      <!-- 解锁提示 -->
+      <div class="unlock-tip" v-if="!isVip">
+        <div class="unlock-tip-icon">👑</div>
+        <h3>开通VIP解锁全部姿势</h3>
+        <p>上百个姿势等您探索</p>
+        <a href="#" class="unlock-btn">立即解锁</a>
+      </div>
+    </section>
+
+    <!-- 底部导航 -->
+    <nav class="bottom-nav">
+      <a href="index.html" class="bottom-nav-item">
+        <span>🏠</span>
+        <span>首页</span>
+      </a>
+      <a href="#" class="bottom-nav-item active">
+        <span>❤️</span>
+        <span>姿势</span>
+      </a>
+      <a href="#" class="bottom-nav-item">
+        <span>💎</span>
+        <span>会员</span>
+      </a>
+    </nav>
+  </div>
+
+  <script>
+    const { createApp, ref, computed, onMounted } = Vue;
+
+    createApp({
+      setup() {
+        const loading = ref(true);
+        const isVip = ref(false);
+        const activeFilter = ref('all');
+        const freeCount = 10;
+
+        const filters = [
+          { id: 'all', name: '全部' },
+          { id: 'easy', name: '入门级' },
+          { id: 'medium', name: '进阶级' },
+          { id: 'hard', name: '挑战级' }
+        ];
+
+        // 模拟姿势图片数据
+        const positions = ref([]);
+
+        const filteredPositions = computed(() => {
+          if (activeFilter.value === 'all') {
+            return positions.value;
+          }
+          // 简化处理，实际会有筛选逻辑
+          return positions.value;
+        });
+
+        onMounted(() => {
+          // 模拟加载数据
+          setTimeout(() => {
+            // 生成占位图片
+            const pics = [
+              'https://picsum.photos/300/400?random=10',
+              'https://picsum.photos/300/400?random=11',
+              'https://picsum.photos/300/400?random=12',
+              'https://picsum.photos/300/400?random=13',
+              'https://picsum.photos/300/400?random=14',
+              'https://picsum.photos/300/400?random=15',
+              'https://picsum.photos/300/400?random=16',
+              'https://picsum.photos/300/400?random=17',
+              'https://picsum.photos/300/400?random=18',
+              'https://picsum.photos/300/400?random=19',
+              'https://picsum.photos/300/400?random=20',
+              'https://picsum.photos/300/400?random=21'
+            ];
+
+            positions.value = pics.map((src, i) => src);
+            loading.value = false;
+          }, 800);
+
+          // 检查VIP状态
+          const vipStatus = localStorage.getItem('vip_status');
+          isVip.value = vipStatus === 'true';
+        });
+
+        return {
+          loading,
+          isVip,
+          activeFilter,
+          filters,
+          positions,
+          filteredPositions,
+          freeCount
+        };
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>

@@ -1,0 +1,18 @@
+/* 高端私密主题 */
+.theme-premium {
+  --theme-primary: #9775fa;
+  --theme-secondary: #845ef7;
+  --theme-accent: #b197fd;
+  --theme-background: #1a1a2e;
+  --theme-background-secondary: #16213e;
+  --theme-text: #e9ecef;
+  --theme-text-light: #adb5bd;
+  --theme-card-bg: #2d2d44;
+  --theme-card-border: rgba(151,117,250,0.3);
+  --theme-border-radius: 12px;
+  --theme-border-radius-sm: 6px;
+  --theme-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  --theme-shadow-hover: 0 8px 30px rgba(0,0,0,0.5);
+  --theme-gradient: linear-gradient(135deg, #9775fa, #845ef7);
+  --theme-btn-bg: linear-gradient(135deg, #9775fa, #845ef7);
+}

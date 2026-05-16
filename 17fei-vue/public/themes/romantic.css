@@ -1,0 +1,18 @@
+/* 浪漫梦幻主题 */
+:root {
+  --theme-primary: #ff6b9d;
+  --theme-secondary: #c44569;
+  --theme-accent: #ff8fab;
+  --theme-background: #fff0f5;
+  --theme-background-secondary: #ffe4ec;
+  --theme-text: #4a4a4a;
+  --theme-text-light: #8a6c6c;
+  --theme-card-bg: #ffffff;
+  --theme-card-border: rgba(255,107,157,0.2);
+  --theme-border-radius: 16px;
+  --theme-border-radius-sm: 8px;
+  --theme-shadow: 0 4px 20px rgba(255,107,157,0.3);
+  --theme-shadow-hover: 0 8px 30px rgba(255,107,157,0.4);
+  --theme-gradient: linear-gradient(135deg, #ff6b9d, #c44569);
+  --theme-btn-bg: linear-gradient(135deg, #ff6b9d, #c44569);
+}

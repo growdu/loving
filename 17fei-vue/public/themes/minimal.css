@@ -1,0 +1,18 @@
+/* 简约现代主题 */
+.theme-minimal {
+  --theme-primary: #5c7cfa;
+  --theme-secondary: #4c6ef5;
+  --theme-accent: #748ffc;
+  --theme-background: #f8f9fa;
+  --theme-background-secondary: #e9ecef;
+  --theme-text: #343a40;
+  --theme-text-light: #868e96;
+  --theme-card-bg: #ffffff;
+  --theme-card-border: rgba(0,0,0,0.08);
+  --theme-border-radius: 8px;
+  --theme-border-radius-sm: 4px;
+  --theme-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  --theme-shadow-hover: 0 4px 16px rgba(0,0,0,0.12);
+  --theme-gradient: linear-gradient(135deg, #5c7cfa, #4c6ef5);
+  --theme-btn-bg: linear-gradient(135deg, #5c7cfa, #4c6ef5);
+}

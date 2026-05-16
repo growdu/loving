@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>登录 - 17fei</title>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --primary: #ff6b9d;
+      --primary-dark: #c44569;
+      --accent: #ff8fab;
+      --bg: #fff0f5;
+      --bg-secondary: #ffe4ec;
+      --text: #4a4a4a;
+      --text-light: #8a6c6c;
+      --card: #ffffff;
+      --border: rgba(255,107,157,0.2);
+      --radius: 16px;
+      --radius-sm: 8px;
+      --shadow: 0 4px 20px rgba(255,107,157,0.3);
+      --shadow-hover: 0 8px 30px rgba(255,107,157,0.4);
+      --gradient: linear-gradient(135deg, #ff6b9d, #c44569);
+    }
+
+    body {
+      font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--gradient);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    @keyframes scaleIn {
+      from { opacity: 0; transform: scale(0.9); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* 登录容器 */
+    .login-container {
+      width: 100%;
+      max-width: 400px;
+      padding: 20px;
+    }
+
+    .login-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+      overflow: hidden;
+      animation: scaleIn 0.4s ease;
+    }
+
+    /* 头部 */
+    .login-header {
+      padding: 32px 24px;
+      text-align: center;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .login-logo {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      margin-bottom: 16px;
+    }
+
+    .login-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+
+    .login-subtitle {
+      font-size: 0.9rem;
+      color: var(--text-light);
+    }
+
+    /* 登录表单 */
+    .login-body {
+      padding: 32px 24px;
+    }
+
+    /* 手机号输入 */
+    .input-group {
+      margin-bottom: 16px;
+    }
+
+    .input-label {
+      display: block;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 12px;
+    }
+
+    .input-field {
+      flex: 1;
+      padding: 14px 16px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 1rem;
+      background: var(--bg);
+      color: var(--text);
+      transition: all 0.2s;
+    }
+
+    .input-field:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(255,107,157,0.1);
+    }
+
+    .input-field::placeholder {
+      color: var(--text-light);
+    }
+
+    /* 验证码按钮 */
+    .code-btn {
+      padding: 14px 20px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 0.9rem;
+      color: var(--primary);
+      font-weight: 500;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+
+    .code-btn:hover:not(:disabled) {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+
+    .code-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    /* 登录按钮 */
+    .login-btn {
+      width: 100%;
+      padding: 16px;
+      background: var(--gradient);
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: white;
+      cursor: pointer;
+      transition: all 0.3s;
+      box-shadow: var(--shadow);
+    }
+
+    .login-btn:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-hover);
+    }
+
+    .login-btn:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+
+    /* 分隔符 */
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin: 24px 0;
+      color: var(--text-light);
+      font-size: 0.85rem;
+    }
+
+    .divider::before,
+    .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* 微信登录 */
+    .wechat-login {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      width: 100%;
+      padding: 14px;
+      background: #07c160;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: 1rem;
+      font-weight: 500;
+      color: white;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .wechat-login:hover {
+      background: #06a750;
+    }
+
+    .wechat-icon {
+      font-size: 1.2rem;
+    }
+
+    /* 底部链接 */
+    .login-footer {
+      padding: 16px 24px;
+      text-align: center;
+      border-top: 1px solid var(--border);
+      font-size: 0.85rem;
+      color: var(--text-light);
+    }
+
+    .login-footer a {
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    /* 步骤指示器 */
+    .step-indicator {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+
+    .step-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--border);
+      transition: all 0.3s;
+    }
+
+    .step-dot.active {
+      width: 24px;
+      border-radius: 4px;
+      background: var(--primary);
+    }
+
+    /* 角色选择 */
+    .role-section {
+      margin-bottom: 24px;
+    }
+
+    .role-title {
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--text);
+      margin-bottom: 12px;
+    }
+
+    .role-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .role-card {
+      padding: 20px;
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .role-card:hover {
+      border-color: var(--primary);
+    }
+
+    .role-card.selected {
+      border-color: var(--primary);
+      background: var(--bg-secondary);
+    }
+
+    .role-icon {
+      font-size: 2.5rem;
+      margin-bottom: 8px;
+    }
+
+    .role-name {
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .role-desc {
+      font-size: 0.8rem;
+      color: var(--text-light);
+      margin-top: 4px;
+    }
+
+    /* 协议 */
+    .agreement {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      margin-bottom: 16px;
+      font-size: 0.85rem;
+      color: var(--text-light);
+    }
+
+    .agreement input {
+      margin-top: 2px;
+    }
+
+    .agreement a {
+      color: var(--primary);
+      text-decoration: none;
+    }
+
+    /* 提示消息 */
+    .toast {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 12px 24px;
+      background: var(--text);
+      color: white;
+      border-radius: var(--radius-sm);
+      font-size: 0.9rem;
+      animation: slideUp 0.3s ease;
+      z-index: 1000;
+    }
+
+    .toast.error {
+      background: #e53e3e;
+    }
+
+    .toast.success {
+      background: #07c160;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <!-- Toast提示 -->
+    <div v-if="toast.show" class="toast" :class="toast.type">
+      {{ toast.message }}
+    </div>
+
+    <div class="login-container">
+      <div class="login-card">
+        <!-- 头部 -->
+        <div class="login-header">
+          <img src="https://17fei.fun/logo.png" class="login-logo" alt="logo">
+          <h1 class="login-title">欢迎回来</h1>
+          <p class="login-subtitle">登录后开始甜蜜互动</p>
+        </div>
+
+        <!-- 登录表单 -->
+        <div class="login-body">
+          <!-- 步骤指示器 -->
+          <div class="step-indicator">
+            <div class="step-dot" :class="{ active: step >= 1 }"></div>
+            <div class="step-dot" :class="{ active: step >= 2 }"></div>
+          </div>
+
+          <!-- 步骤1: 手机号验证 -->
+          <div v-if="step === 1">
+            <div class="input-group">
+              <label class="input-label">手机号</label>
+              <input
+                type="tel"
+                class="input-field"
+                v-model="phone"
+                placeholder="请输入手机号"
+                maxlength="11"
+              >
+            </div>
+
+            <div class="input-group">
+              <label class="input-label">验证码</label>
+              <div class="input-row">
+                <input
+                  type="text"
+                  class="input-field"
+                  v-model="code"
+                  placeholder="请输入验证码"
+                  maxlength="6"
+                >
+                <button
+                  class="code-btn"
+                  @click="sendCode"
+                  :disabled="countdown > 0"
+                >
+                  {{ countdown > 0 ? `${countdown}s` : '获取验证码' }}
+                </button>
+              </div>
+            </div>
+
+            <button class="login-btn" @click="verifyCode" :disabled="!canSubmit">
+              下一步
+            </button>
+
+            <div class="divider">其他登录方式</div>
+
+            <button class="wechat-login" @click="wechatLogin">
+              <span class="wechat-icon">💚</span>
+              微信登录
+            </button>
+          </div>
+
+          <!-- 步骤2: 角色选择 -->
+          <div v-if="step === 2">
+            <div class="role-section">
+              <div class="role-title">选择你的AI伴侣</div>
+              <div class="role-grid">
+                <div
+                  class="role-card"
+                  :class="{ selected: role === 'female' }"
+                  @click="role = 'female'"
+                >
+                  <div class="role-icon">👩</div>
+                  <div class="role-name">女伴侣</div>
+                  <div class="role-desc">温柔体贴型</div>
+                </div>
+                <div
+                  class="role-card"
+                  :class="{ selected: role === 'male' }"
+                  @click="role = 'male'"
+                >
+                  <div class="role-icon">👨</div>
+                  <div class="role-name">男伴侣</div>
+                  <div class="role-desc">阳光活力型</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="agreement">
+              <input type="checkbox" id="agreement" v-model="agreed">
+              <label for="agreement">
+                我已阅读并同意<a href="#">《用户协议》</a>和<a href="#">《隐私政策》</a>
+              </label>
+            </div>
+
+            <button class="login-btn" @click="completeLogin" :disabled="!agreed">
+              完成登录
+            </button>
+          </div>
+        </div>
+
+        <!-- 底部 -->
+        <div class="login-footer">
+          登录即表示同意我们的
+          <a href="#">服务条款</a>和
+          <a href="#">隐私政策</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const { createApp, ref, computed } = Vue;
+
+    createApp({
+      setup() {
+        const step = ref(1);
+        const phone = ref('');
+        const code = ref('');
+        const role = ref('female');
+        const agreed = ref(false);
+        const countdown = ref(0);
+        const toast = ref({ show: false, type: 'info', message: '' });
+
+        let countdownTimer = null;
+
+        const canSubmit = computed(() => {
+          return phone.value.length === 11 && code.value.length === 4;
+        });
+
+        const showToast = (message, type = 'info') => {
+          toast.value = { show: true, type, message };
+          setTimeout(() => {
+            toast.value.show = false;
+          }, 3000);
+        };
+
+        const sendCode = () => {
+          if (phone.value.length !== 11) {
+            showToast('请输入正确的手机号', 'error');
+            return;
+          }
+
+          // 模拟发送验证码
+          showToast('验证码已发送', 'success');
+          countdown.value = 60;
+
+          countdownTimer = setInterval(() => {
+            countdown.value--;
+            if (countdown.value <= 0) {
+              clearInterval(countdownTimer);
+            }
+          }, 1000);
+        };
+
+        const verifyCode = () => {
+          if (!canSubmit.value) return;
+
+          // 模拟验证
+          if (code.value === '123456' || code.value.length === 4) {
+            step.value = 2;
+          } else {
+            showToast('验证码错误', 'error');
+          }
+        };
+
+        const wechatLogin = () => {
+          showToast('微信登录开发中', 'info');
+        };
+
+        const completeLogin = () => {
+          if (!agreed.value) {
+            showToast('请先同意用户协议', 'error');
+            return;
+          }
+
+          // 模拟登录成功
+          showToast('登录成功！', 'success');
+          localStorage.setItem('user_role', role.value);
+          localStorage.setItem('isLoggedIn', 'true');
+
+          // 模拟跳转
+          setTimeout(() => {
+            window.location.href = 'index.html';
+          }, 1500);
+        };
+
+        return {
+          step,
+          phone,
+          code,
+          role,
+          agreed,
+          countdown,
+          toast,
+          canSubmit,
+          sendCode,
+          verifyCode,
+          wechatLogin,
+          completeLogin
+        };
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>

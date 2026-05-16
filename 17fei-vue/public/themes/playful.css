@@ -1,0 +1,18 @@
+/* 活泼可爱主题 */
+.theme-playful {
+  --theme-primary: #ff922b;
+  --theme-secondary: #ff7b00;
+  --theme-accent: #ffc078;
+  --theme-background: #fff9f0;
+  --theme-background-secondary: #fff3e0;
+  --theme-text: #4a4a4a;
+  --theme-text-light: #8a7c6c;
+  --theme-card-bg: #ffffff;
+  --theme-card-border: rgba(255,146,43,0.2);
+  --theme-border-radius: 12px;
+  --theme-border-radius-sm: 6px;
+  --theme-shadow: 0 4px 20px rgba(255,146,43,0.25);
+  --theme-shadow-hover: 0 8px 30px rgba(255,146,43,0.35);
+  --theme-gradient: linear-gradient(135deg, #ff922b, #ff7b00);
+  --theme-btn-bg: linear-gradient(135deg, #ff922b, #ff7b00);
+}

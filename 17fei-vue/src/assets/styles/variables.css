@@ -1,0 +1,79 @@
+/* 默认主题 - 浪漫梦幻 */
+:root {
+  --primary: #ff6b9d;
+  --primary-dark: #c44569;
+  --accent: #ff8fab;
+  --background: #fff0f5;
+  --background-secondary: #ffe4ec;
+  --text: #4a4a4a;
+  --text-light: #8a6c6c;
+  --card-bg: #ffffff;
+  --card-border: rgba(255,107,157,0.2);
+  --theme-border-radius: 16px;
+  --theme-border-radius-sm: 8px;
+  --theme-shadow: 0 4px 20px rgba(255,107,157,0.3);
+  --theme-shadow-hover: 0 8px 30px rgba(255,107,157,0.4);
+  --theme-btn-bg: linear-gradient(135deg, #ff6b9d, #c44569);
+  --theme-btn-hover-bg: linear-gradient(135deg, #ff8fab, #d65a7d);
+  --theme-gradient: linear-gradient(135deg, #ff6b9d, #c44569);
+}
+
+/* 简约现代主题 */
+.theme-minimal {
+  --primary: #5c7cfa;
+  --primary-dark: #4c6ef5;
+  --accent: #748ffc;
+  --background: #f8f9fa;
+  --background-secondary: #e9ecef;
+  --text: #343a40;
+  --text-light: #868e96;
+  --card-bg: #ffffff;
+  --card-border: rgba(0,0,0,0.08);
+  --theme-border-radius: 8px;
+  --theme-border-radius-sm: 4px;
+  --theme-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  --theme-shadow-hover: 0 4px 16px rgba(0,0,0,0.12);
+  --theme-btn-bg: linear-gradient(135deg, #5c7cfa, #4c6ef5);
+  --theme-btn-hover-bg: linear-gradient(135deg, #748ffc, #5c7cfa);
+  --theme-gradient: linear-gradient(135deg, #5c7cfa, #4c6ef5);
+}
+
+/* 活泼可爱主题 */
+.theme-playful {
+  --primary: #ff922b;
+  --primary-dark: #ff7b00;
+  --accent: #ffc078;
+  --background: #fff9f0;
+  --background-secondary: #fff3e0;
+  --text: #4a4a4a;
+  --text-light: #8a7c6c;
+  --card-bg: #ffffff;
+  --card-border: rgba(255,146,43,0.2);
+  --theme-border-radius: 12px;
+  --theme-border-radius-sm: 6px;
+  --theme-shadow: 0 4px 20px rgba(255,146,43,0.25);
+  --theme-shadow-hover: 0 8px 30px rgba(255,146,43,0.35);
+  --theme-btn-bg: linear-gradient(135deg, #ff922b, #ff7b00);
+  --theme-btn-hover-bg: linear-gradient(135deg, #ffc078, #ff922b);
+  --theme-gradient: linear-gradient(135deg, #ff922b, #ff7b00);
+}
+
+/* 高端私密主题 */
+.theme-premium {
+  --primary: #9775fa;
+  --primary-dark: #845ef7;
+  --accent: #b197fd;
+  --background: #1a1a2e;
+  --background-secondary: #16213e;
+  --text: #e9ecef;
+  --text-light: #adb5bd;
+  --card-bg: #2d2d44;
+  --card-border: rgba(151,117,250,0.3);
+  --theme-border-radius: 12px;
+  --theme-border-radius-sm: 6px;
+  --theme-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  --theme-shadow-hover: 0 8px 30px rgba(0,0,0,0.5);
+  --theme-btn-bg: linear-gradient(135deg, #9775fa, #845ef7);
+  --theme-btn-hover-bg: linear-gradient(135deg, #b197fd, #9775fa);
+  --theme-gradient: linear-gradient(135deg, #9775fa, #845ef7);
+}
