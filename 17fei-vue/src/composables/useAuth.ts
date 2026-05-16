@@ -1,14 +1,14 @@
-import { ref, computed } from 'vue'
+import { ref, computed, onUnmounted } from 'vue'
 import { useUserStore, type User } from '@/stores/user'
 import { useRouter } from 'vue-router'
-
-// Mock验证码存储（生产环境应为后端）
-let mockCode = ''
-let mockCodeExpire = 0
 
 export function useAuth() {
   const store = useUserStore()
   const router = useRouter()
+
+  // Mock验证码存储（生产环境应为后端）- 实例级状态，避免多组件实例共享
+  let mockCode = ''
+  let mockCodeExpire = 0
 
   const loading = ref(false)
   const error = ref('')
@@ -19,9 +19,22 @@ export function useAuth() {
   const isVip = computed(() => store.isVip)
   const user = computed(() => store.user)
 
+  // 组件卸载时清理定时器
+  onUnmounted(() => {
+    if (countdownTimer) {
+      clearInterval(countdownTimer)
+      countdownTimer = null
+    }
+  })
+
   // 发送验证码
   async function sendCode(phone: string): Promise<{ success: boolean; message: string }> {
     error.value = ''
+
+    // 倒计时中禁止重复发送
+    if (countdown.value > 0) {
+      return { success: false, message: `请稍后再试（${countdown.value}秒）` }
+    }
 
     // 手机号格式验证
     if (!/^1[3-9]\d{9}$/.test(phone)) {
@@ -39,8 +52,10 @@ export function useAuth() {
 
     loading.value = false
 
-    // 测试用：打印验证码到控制台
-    console.log(`[Mock] 验证码: ${mockCode}`)
+    // 测试用：打印验证码到控制台（仅开发环境）
+    if (import.meta.env.DEV) {
+      console.log(`[Mock] 验证码: ${mockCode}`)
+    }
 
     // 启动倒计时
     startCountdown()
@@ -51,6 +66,12 @@ export function useAuth() {
   // 验证码登录
   async function loginWithCode(phone: string, code: string): Promise<{ success: boolean; message: string }> {
     error.value = ''
+
+    // 已登录用户禁止重复登录
+    if (store.isLoggedIn) {
+      return { success: false, message: '您已登录，请勿重复操作' }
+    }
+
     loading.value = true
 
     // 验证手机号格式
@@ -107,10 +128,12 @@ export function useAuth() {
   }
 
   // 更新用户角色
-  async function updateRole(role: 'male' | 'female' | 'couple'): Promise<void> {
+  async function updateRole(role: 'male' | 'female' | 'couple'): Promise<{ success: boolean; message: string }> {
     if (store.user) {
       store.updateUser({ ...store.user, role })
+      return { success: true, message: '角色更新成功' }
     }
+    return { success: false, message: '用户未登录' }
   }
 
   // 登出
