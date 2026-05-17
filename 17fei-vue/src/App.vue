@@ -1,27 +1,18 @@
-<template>
-  <div id="app">
-    <router-view />
-  </div>
-</template>
-
 <script setup lang="ts">
 import { onMounted } from 'vue'
-import { useThemeStore } from '@/stores/theme'
 import { useUserStore } from '@/stores/user'
+import { useThemeStore } from '@/stores/theme'
 
-const themeStore = useThemeStore()
 const userStore = useUserStore()
+const themeStore = useThemeStore()
 
+// 应用启动时恢复状态
 onMounted(() => {
-  themeStore.loadState()
   userStore.loadState()
+  themeStore.loadState()
 })
 </script>
 
-<style>
-@import '@/assets/styles/base.css';
-
-#app {
-  min-height: 100vh;
-}
-</style>
+<template>
+  <RouterView />
+</template>
