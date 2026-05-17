@@ -7,6 +7,7 @@
         <p>让爱更有趣</p>
       </div>
 
+      <!-- 步骤1: 手机号登录 -->
       <div v-if="step === 'phone'" class="login-step">
         <h2>手机号登录</h2>
         <p class="step-hint">未注册的手机号将自动创建账号</p>
@@ -18,6 +19,8 @@
             placeholder="请输入手机号"
             maxlength="11"
             class="input"
+            :class="{ error: phoneError }"
+            @input="phoneError = ''"
           />
         </div>
 
@@ -28,17 +31,19 @@
             placeholder="验证码"
             maxlength="6"
             class="input"
+            :class="{ error: codeError }"
+            @input="codeError = ''"
           />
           <button
             @click="handleSendCode"
-            :disabled="countdown > 0"
+            :disabled="countdown > 0 || loading"
             class="code-btn"
           >
             {{ countdown > 0 ? `${countdown}s` : '获取验证码' }}
           </button>
         </div>
 
-        <p v-if="error" class="error-msg">{{ error }}</p>
+        <p v-if="globalError" class="error-msg">{{ globalError }}</p>
 
         <button @click="handleLogin" :disabled="loading" class="login-btn">
           {{ loading ? '登录中...' : '登录' }}
@@ -49,6 +54,7 @@
         </button>
       </div>
 
+      <!-- 步骤2: 角色选择 -->
       <div v-else class="login-step">
         <h2>选择您的角色</h2>
         <p class="step-hint">选择一个最能代表您的身份</p>
@@ -57,9 +63,10 @@
           <button
             v-for="role in roles"
             :key="role.id"
-            @click="selectRole(role.id)"
+            @click="handleSelectRole(role.id)"
             class="role-card"
             :class="{ active: selectedRole === role.id }"
+            :disabled="roleLoading"
           >
             <span class="role-icon">{{ role.icon }}</span>
             <span class="role-name">{{ role.name }}</span>
@@ -67,8 +74,12 @@
           </button>
         </div>
 
-        <button @click="step = 'phone'" class="text-btn">
+        <button @click="step = 'phone'; selectedRole = ''" class="text-btn">
           ← 返回手机登录
+        </button>
+
+        <button v-if="selectedRole" @click="handleSkipRole" class="skip-btn">
+          跳过 →
         </button>
       </div>
     </div>
@@ -76,18 +87,29 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '@/composables/useAuth'
 
 const router = useRouter()
-const { sendCode, loginWithCode, loading, error } = useAuth()
+const {
+  loading,
+  error: globalError,
+  countdown,
+  sendCode,
+  loginWithCode,
+  updateRole,
+  user,
+  isLoggedIn
+} = useAuth()
 
 const step = ref<'phone' | 'role'>('phone')
 const phone = ref('')
 const code = ref('')
-const countdown = ref(0)
+const phoneError = ref('')
+const codeError = ref('')
 const selectedRole = ref('')
+const roleLoading = ref(false)
 
 const roles = [
   { id: 'male', icon: '♂', name: '男性', desc: '我是男生' },
@@ -95,33 +117,76 @@ const roles = [
   { id: 'couple', icon: '💑', name: '情侣', desc: '我们是情侣' }
 ]
 
+// 如果已登录，直接跳转
+onMounted(() => {
+  if (isLoggedIn.value) {
+    router.push('/')
+  }
+})
+
 async function handleSendCode() {
+  phoneError.value = ''
+
   if (phone.value.length !== 11) {
+    phoneError.value = '请输入11位手机号'
     return
   }
-  await sendCode(phone.value)
-  countdown.value = 60
-  const timer = setInterval(() => {
-    countdown.value--
-    if (countdown.value <= 0) {
-      clearInterval(timer)
-    }
-  }, 1000)
+
+  const result = await sendCode(phone.value)
+  if (!result.success && result.message.includes('手机号')) {
+    phoneError.value = result.message
+  } else if (!result.success) {
+    globalError.value = result.message
+  }
 }
 
 async function handleLogin() {
-  if (phone.value.length !== 11 || code.value.length !== 6) {
+  phoneError.value = ''
+  codeError.value = ''
+
+  if (phone.value.length !== 11) {
+    phoneError.value = '请输入11位手机号'
     return
   }
-  const success = await loginWithCode(phone.value, code.value)
-  if (success) {
-    step.value = 'role'
+
+  if (code.value.length !== 6) {
+    codeError.value = '请输入6位验证码'
+    return
+  }
+
+  const result = await loginWithCode(phone.value, code.value)
+
+  if (result.success) {
+    // 登录成功，检查是否已有角色
+    if (user.value?.role) {
+      router.push('/')
+    } else {
+      step.value = 'role'
+    }
+  } else {
+    if (result.message.includes('手机号')) {
+      phoneError.value = result.message
+    } else if (result.message.includes('验证码')) {
+      codeError.value = result.message
+    } else {
+      globalError.value = result.message
+    }
   }
 }
 
-function selectRole(roleId: string) {
+async function handleSelectRole(roleId: string) {
   selectedRole.value = roleId
-  // TODO: Update user role in store
+  roleLoading.value = true
+
+  try {
+    await updateRole(roleId as 'male' | 'female' | 'couple')
+    router.push('/')
+  } finally {
+    roleLoading.value = false
+  }
+}
+
+function handleSkipRole() {
   router.push('/')
 }
 </script>
@@ -205,6 +270,10 @@ function selectRole(roleId: string) {
   border-color: var(--primary);
 }
 
+.input.error {
+  border-color: #e74c3c;
+}
+
 .code-btn {
   padding: 0 16px;
   background: var(--background-secondary);
@@ -214,6 +283,7 @@ function selectRole(roleId: string) {
   font-size: 0.85rem;
   white-space: nowrap;
   cursor: pointer;
+  transition: all 0.2s;
 }
 
 .code-btn:disabled {
@@ -239,6 +309,7 @@ function selectRole(roleId: string) {
   font-weight: 600;
   cursor: pointer;
   margin-bottom: 16px;
+  transition: all 0.2s;
 }
 
 .login-btn:disabled {
@@ -254,6 +325,18 @@ function selectRole(roleId: string) {
   color: var(--primary);
   font-size: 0.9rem;
   cursor: pointer;
+}
+
+.skip-btn {
+  width: 100%;
+  padding: 12px;
+  background: var(--background-secondary);
+  border: 1px solid var(--card-border);
+  border-radius: var(--theme-border-radius-sm);
+  color: var(--text-light);
+  font-size: 0.9rem;
+  cursor: pointer;
+  margin-top: 12px;
 }
 
 .role-grid {
@@ -281,6 +364,11 @@ function selectRole(roleId: string) {
 .role-card.active {
   border-color: var(--primary);
   background: rgba(233, 84, 131, 0.05);
+}
+
+.role-card:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .role-icon {
