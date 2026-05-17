@@ -1,7 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import type { RouteRecordRaw } from 'vue-router'
 import { useUserStore } from '@/stores/user'
-import { useThemeStore } from '@/stores/theme'
 
 const routes: RouteRecordRaw[] = [
   {
@@ -60,13 +59,7 @@ const router = createRouter({
 // 路由守卫
 router.beforeEach((to, from, next) => {
   const userStore = useUserStore()
-  const themeStore = useThemeStore()
 
-  // 初始化状态（从 localStorage 恢复）
-  userStore.loadState()
-  themeStore.loadState()
-
-  // 需要认证: meta.requiresAuth === true
   const requiresAuth = to.meta.requiresAuth === true
   const isLoggedIn = userStore.isLoggedIn
 
@@ -82,7 +75,7 @@ router.beforeEach((to, from, next) => {
     return
   }
 
-  // 白名单页面或已登录，直接通过
+  // 其他页面允许访问
   next()
 })
 
