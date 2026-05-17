@@ -1,5 +1,10 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import type { RouteRecordRaw } from 'vue-router'
+import { useUserStore } from '@/stores/user'
+import { useThemeStore } from '@/stores/theme'
+
+// 路由白名单（无需登录可访问）
+const whiteList = ['/', '/login', '/about', '/card', '/positions']
 
 const routes: RouteRecordRaw[] = [
   {
@@ -20,17 +25,20 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/login',
     name: 'Login',
-    component: () => import('@/pages/LoginPage.vue')
+    component: () => import('@/pages/LoginPage.vue'),
+    meta: { requiresAuth: false }
   },
   {
     path: '/ai',
     name: 'AI',
-    component: () => import('@/pages/AIPage.vue')
+    component: () => import('@/pages/AIPage.vue'),
+    meta: { requiresAuth: true }
   },
   {
     path: '/member',
     name: 'Member',
-    component: () => import('@/pages/MemberPage.vue')
+    component: () => import('@/pages/MemberPage.vue'),
+    meta: { requiresAuth: true }
   },
   {
     path: '/about',
@@ -50,6 +58,34 @@ const router = createRouter({
   scrollBehavior() {
     return { top: 0 }
   }
+})
+
+// 路由守卫
+router.beforeEach((to, from, next) => {
+  const userStore = useUserStore()
+  const themeStore = useThemeStore()
+
+  // 初始化状态（从 localStorage 恢复）
+  userStore.loadState()
+  themeStore.loadState()
+
+  const requiresAuth = to.meta.requiresAuth !== false
+  const isLoggedIn = userStore.isLoggedIn
+
+  // 登录页特殊处理：已登录则跳转首页
+  if (to.path === '/login' && isLoggedIn) {
+    next('/')
+    return
+  }
+
+  // 需要认证但未登录
+  if (requiresAuth && !isLoggedIn) {
+    next('/login')
+    return
+  }
+
+  // 白名单页面或已登录，直接通过
+  next()
 })
 
 export default router
