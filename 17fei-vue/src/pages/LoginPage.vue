@@ -3,7 +3,7 @@
     <div class="login-container">
       <div class="login-header">
         <span class="logo-icon">💕</span>
-        <h1>17fei</h1>
+        <h1>Loving</h1>
         <p>让爱更有趣</p>
       </div>
 
@@ -52,6 +52,14 @@
         <button @click="step = 'role'" class="text-btn">
           已有账号？选择角色 →
         </button>
+
+        <div class="divider">
+          <span>或</span>
+        </div>
+
+        <button @click="handleBuiltinLogin" class="builtin-btn">
+          内置账户登录
+        </button>
       </div>
 
       <!-- 步骤2: 角色选择 -->
@@ -90,6 +98,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '@/composables/useAuth'
+import { useUserStore } from '@/stores/user'
 
 const router = useRouter()
 const {
@@ -187,6 +196,24 @@ async function handleSelectRole(roleId: string) {
 }
 
 function handleSkipRole() {
+  router.push('/')
+}
+
+// 内置账户登录
+function handleBuiltinLogin() {
+  const builtinUser = {
+    id: 'builtin_admin',
+    phone: '13800138000',
+    nickname: '管理员',
+    avatar: undefined,
+    isVip: true,
+    role: 'couple' as const,
+    createdAt: new Date().toISOString()
+  }
+  const builtinToken = 'builtin_token_admin'
+
+  const userStore = useUserStore()
+  userStore.login(builtinUser, builtinToken)
   router.push('/')
 }
 </script>
@@ -337,6 +364,44 @@ function handleSkipRole() {
   font-size: 0.9rem;
   cursor: pointer;
   margin-top: 12px;
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  margin: 20px 0;
+  color: var(--text-light);
+  font-size: 0.85rem;
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--card-border);
+}
+
+.divider span {
+  padding: 0 16px;
+}
+
+.builtin-btn {
+  width: 100%;
+  padding: 12px;
+  background: var(--background-secondary);
+  border: 1px solid var(--card-border);
+  border-radius: var(--theme-border-radius-sm);
+  color: var(--primary);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.builtin-btn:hover {
+  background: rgba(233, 84, 131, 0.05);
+  border-color: var(--primary);
 }
 
 .role-grid {

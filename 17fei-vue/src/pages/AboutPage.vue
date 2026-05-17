@@ -3,7 +3,7 @@
     <section class="page-header">
       <div class="container">
         <h1>关于我们</h1>
-        <p>了解17fei的故事</p>
+        <p>了解Loving的故事</p>
       </div>
     </section>
 
@@ -12,7 +12,7 @@
         <div class="about-card">
           <h2>💕 我们的故事</h2>
           <p>
-            17fei 是一个专为情侣设计的亲密互动平台。我们相信，健康、和谐的亲密关系
+            Loving 是一个专为情侣设计的亲密互动平台。我们相信，健康、和谐的亲密关系
             需要双方的用心经营。通过有趣的游戏和互动，我们希望帮助情侣们增进感情，
             让爱情保持新鲜和有趣。
           </p>
@@ -38,13 +38,13 @@
           <h2>📞 联系我们</h2>
           <p>
             如果您有任何问题或建议，欢迎通过以下方式联系我们：<br />
-            邮箱：support@17fei.fun<br />
-            微信：17fei2024
+            邮箱：support@loving.fun<br />
+            微信：loving2024
           </p>
         </div>
 
         <div class="about-footer">
-          <p>© 2024 17fei.fun 版权所有</p>
+          <p>© 2024 loving.fun 版权所有</p>
           <p>粤ICP备12345678号</p>
         </div>
       </div>

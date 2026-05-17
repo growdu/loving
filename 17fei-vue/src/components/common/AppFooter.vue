@@ -6,7 +6,7 @@
         <router-link to="/member" class="footer-link">会员空间</router-link>
         <a href="#" class="footer-link">联系客服</a>
       </div>
-      <p class="footer-text">© 2024 17fei.fun 版权所有</p>
+      <p class="footer-text">© 2024 loving.fun 版权所有</p>
     </div>
   </footer>
 </template>
