@@ -3,9 +3,6 @@ import type { RouteRecordRaw } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { useThemeStore } from '@/stores/theme'
 
-// 路由白名单（无需登录可访问）
-const whiteList = ['/', '/login', '/about', '/card', '/positions']
-
 const routes: RouteRecordRaw[] = [
   {
     path: '/',
@@ -69,7 +66,8 @@ router.beforeEach((to, from, next) => {
   userStore.loadState()
   themeStore.loadState()
 
-  const requiresAuth = to.meta.requiresAuth !== false
+  // 需要认证: meta.requiresAuth === true
+  const requiresAuth = to.meta.requiresAuth === true
   const isLoggedIn = userStore.isLoggedIn
 
   // 登录页特殊处理：已登录则跳转首页
