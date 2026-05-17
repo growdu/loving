@@ -2,8 +2,14 @@
   <DefaultLayout>
     <section class="hero">
       <div class="container">
-        <h1 class="hero-title">让爱更有趣</h1>
-        <p class="hero-subtitle">专为情侣设计的亲密互动游戏平台</p>
+        <h1 class="hero-title">情侣情趣飞行棋</h1>
+        <p class="hero-subtitle">专为情侣设计的情趣小游戏，支持多种设备，随时随地开启甜蜜互动</p>
+
+        <div class="hero-badges">
+          <span class="badge"><span class="badge-icon">📱</span> 移动端适配</span>
+          <span class="badge"><span class="badge-icon">🎮</span> 多款游戏</span>
+          <span class="badge"><span class="badge-icon">❤️</span> 情侣专属</span>
+        </div>
 
         <div class="hero-actions" v-if="!isLoggedIn">
           <router-link to="/login" class="btn-primary">开始探索</router-link>
@@ -14,7 +20,8 @@
 
     <section class="games-section">
       <div class="container">
-        <h2 class="section-title">热门游戏</h2>
+        <h2 class="section-title">游戏列表</h2>
+        <p class="section-subtitle">选择你们喜欢的游戏，开始甜蜜互动</p>
 
         <div class="games-grid">
           <GameCard
@@ -25,6 +32,8 @@
             :title="game.title"
             :description="game.description"
             :tag="game.tag"
+            :tag-type="game.tagType"
+            :emoji="game.emoji"
           />
         </div>
       </div>
@@ -36,24 +45,24 @@
 
         <div class="features-grid">
           <div class="feature-item">
-            <span class="feature-icon">🎯</span>
-            <h3>专注亲密</h3>
-            <p>专为情侣设计的互动内容</p>
+            <span class="feature-icon">🎨</span>
+            <h3>多款主题</h3>
+            <p>多种主题风格，一键切换</p>
           </div>
           <div class="feature-item">
             <span class="feature-icon">🔒</span>
             <h3>隐私保护</h3>
-            <p>端到端加密，仅限二人世界</p>
+            <p>本地存储，数据安全</p>
           </div>
           <div class="feature-item">
-            <span class="feature-icon">💕</span>
-            <h3>增进感情</h3>
-            <p>有趣的互动拉近彼此距离</p>
+            <span class="feature-icon">📱</span>
+            <h3>多端支持</h3>
+            <p>支持手机、平板、电脑</p>
           </div>
           <div class="feature-item">
-            <span class="feature-icon">✨</span>
-            <h3>持续更新</h3>
-            <p>每周上新，永远有惊喜</p>
+            <span class="feature-icon">💰</span>
+            <h3>实惠价格</h3>
+            <p>10元开通月卡，49元终身</p>
           </div>
         </div>
       </div>
@@ -62,7 +71,6 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
 import { useAuth } from '@/composables/useAuth'
 import DefaultLayout from '@/components/layout/DefaultLayout.vue'
 import GameCard from '@/components/game/GameCard.vue'
@@ -73,26 +81,38 @@ const games = [
   {
     id: 'fxq',
     to: '/game/fxq',
-    image: '/images/games/flight-chess.jpg',
+    emoji: '🎲',
     title: '飞行棋',
-    description: '经典双人飞行棋，和TA一起重温童年乐趣',
-    tag: '经典'
+    description: '经典飞行棋游戏，适合情侣一起游玩',
+    tag: '热门',
+    tagType: 'hot' as const
   },
   {
     id: 'card',
     to: '/card',
-    image: '/images/games/card.jpg',
+    emoji: '🃏',
     title: '亲密卡牌',
-    description: '考验默契的时候到了，你们能猜对吗？',
-    tag: '默契'
+    description: '多种版本任选，从恋爱到情趣，满足各种口味',
+    tag: '10+版本',
+    tagType: 'new' as const
+  },
+  {
+    id: 'positions',
+    to: '/positions',
+    emoji: '💑',
+    title: '姿势卡牌',
+    description: '解锁更多姿势，增加情趣体验',
+    tag: '100+姿势',
+    tagType: 'default' as const
   },
   {
     id: 'ai',
     to: '/ai',
-    image: '/images/games/ai.jpg',
+    emoji: '🤖',
     title: 'AI伴侣',
-    description: '智能互动助手，随时陪伴你左右',
-    tag: 'AI'
+    description: '智能AI伴侣，懂你所需',
+    tag: '新功能',
+    tagType: 'new' as const
   }
 ]
 </script>
@@ -101,20 +121,48 @@ const games = [
 .hero {
   padding: 60px 20px;
   text-align: center;
-  background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary) 100%);
-  color: white;
+  background: linear-gradient(180deg, var(--background) 0%, var(--background-secondary) 100%);
 }
 
 .hero-title {
   font-size: 2.5rem;
   font-weight: 900;
+  background: var(--theme-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   margin-bottom: 12px;
 }
 
 .hero-subtitle {
   font-size: 1.1rem;
-  opacity: 0.9;
+  color: var(--text-light);
+  max-width: 600px;
+  margin: 0 auto 32px;
+}
+
+.hero-badges {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  flex-wrap: wrap;
   margin-bottom: 32px;
+}
+
+.badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: var(--card-bg);
+  border-radius: 20px;
+  font-size: 0.9rem;
+  color: var(--text);
+  box-shadow: var(--theme-shadow);
+}
+
+.badge-icon {
+  font-size: 1.1rem;
 }
 
 .hero-actions {
@@ -126,8 +174,8 @@ const games = [
 
 .btn-primary {
   padding: 14px 32px;
-  background: white;
-  color: var(--primary);
+  background: var(--theme-gradient);
+  color: white;
   border-radius: 30px;
   font-weight: 600;
   text-decoration: none;
@@ -136,14 +184,14 @@ const games = [
 
 .btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--theme-shadow-hover);
 }
 
 .btn-secondary {
   padding: 14px 32px;
   background: transparent;
-  color: white;
-  border: 2px solid white;
+  color: var(--primary);
+  border: 2px solid var(--primary);
   border-radius: 30px;
   font-weight: 600;
   text-decoration: none;
@@ -151,20 +199,30 @@ const games = [
 }
 
 .btn-secondary:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--background-secondary);
 }
 
-.games-section,
+.games-section {
+  padding: 60px 20px;
+  background: var(--background-secondary);
+}
+
 .features-section {
   padding: 60px 20px;
 }
 
 .section-title {
-  font-size: 1.5rem;
+  font-size: 1.8rem;
   font-weight: 700;
   color: var(--text);
-  margin-bottom: 32px;
+  margin-bottom: 8px;
   text-align: center;
+}
+
+.section-subtitle {
+  color: var(--text-light);
+  text-align: center;
+  margin-bottom: 40px;
 }
 
 .games-grid {
@@ -175,22 +233,34 @@ const games = [
 
 .features-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 24px;
 }
 
 .feature-item {
   text-align: center;
-  padding: 24px;
+  padding: 32px 24px;
   background: var(--card-bg);
   border-radius: var(--theme-border-radius);
   border: 1px solid var(--card-border);
+  box-shadow: var(--theme-shadow);
+  transition: transform 0.3s;
+}
+
+.feature-item:hover {
+  transform: translateY(-4px);
 }
 
 .feature-icon {
-  font-size: 2.5rem;
-  display: block;
-  margin-bottom: 12px;
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 16px;
+  background: var(--theme-gradient);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
 }
 
 .feature-item h3 {
@@ -212,6 +282,10 @@ const games = [
 
   .hero-title {
     font-size: 1.8rem;
+  }
+
+  .section-title {
+    font-size: 1.5rem;
   }
 }
 </style>

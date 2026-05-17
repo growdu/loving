@@ -1,6 +1,7 @@
 /* 默认主题 - 浪漫梦幻 */
 :root {
   --primary: #ff6b9d;
+  --primary-light: #ff8fab;
   --primary-dark: #c44569;
   --accent: #ff8fab;
   --background: #fff0f5;

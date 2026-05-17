@@ -10,44 +10,60 @@
     <section class="card-section">
       <div class="container">
         <div class="version-selector">
-          <button
-            v-for="version in versions"
-            :key="version.id"
-            @click="selectVersion(version.id)"
-            class="version-btn"
-            :class="{ active: currentVersion === version.id }"
-          >
-            {{ version.name }}
-          </button>
+          <div class="version-scroll">
+            <button
+              v-for="ver in versions"
+              :key="ver.id"
+              @click="selectVersion(ver.id)"
+              class="version-chip"
+              :class="{
+                active: currentVersionId === ver.id,
+                locked: ver.locked && !isVip
+              }"
+              :disabled="ver.locked && !isVip"
+            >
+              {{ ver.name }}
+              <span v-if="ver.locked && !isVip">🔒</span>
+            </button>
+          </div>
         </div>
 
         <div class="card-area">
-          <div class="flip-card" :class="{ flipped: isFlipped }" @click="flipCard">
+          <div
+            class="flip-card"
+            :class="{ flipped: isFlipped }"
+            @click="flipCard"
+          >
             <div class="flip-card-inner">
               <div class="flip-card-front">
-                <span class="card-icon">🎴</span>
-                <span class="card-hint">点击翻转</span>
+                <div class="flip-card-front-icon">💕</div>
+                <div class="flip-card-front-text">点击抽取任务</div>
               </div>
               <div class="flip-card-back">
-                <p class="card-content">{{ currentCard.content }}</p>
-                <span v-if="currentCard.isVipOnly" class="vip-badge">VIP</span>
+                <div class="flip-card-back-content">{{ currentTask }}</div>
+                <div class="card-id">#{{ cardIndex }}</div>
               </div>
             </div>
           </div>
         </div>
 
-        <div class="card-controls">
-          <button @click="resetCard" class="control-btn">
-            🔄 重新开始
+        <div class="action-buttons">
+          <button class="action-btn action-btn-secondary" @click="resetCard">
+            重置
           </button>
-          <button @click="nextCard" class="control-btn primary">
-            ➡️ 下一张
+          <button class="action-btn action-btn-primary" @click="flipCard">
+            {{ isFlipped ? '再抽一张' : '翻转' }}
           </button>
         </div>
+      </div>
+    </section>
 
-        <p v-if="!isVip" class="vip-hint">
-          解锁全部卡牌，享受更多乐趣
-          <router-link to="/login">开通VIP</router-link>
+    <section class="rules-section">
+      <div class="container">
+        <div class="rules-title">基本玩法</div>
+        <p class="rules-text">
+          轮流抽卡完成任务<br>
+          无法完成认输受惩罚
         </p>
       </div>
     </section>
@@ -63,49 +79,49 @@ import DefaultLayout from '@/components/layout/DefaultLayout.vue'
 const store = useCardStore()
 const { isVip } = useAuth()
 
-const currentVersion = computed(() => store.currentVersion)
-const isFlipped = computed(() => store.isFlipped)
+const isFlipped = ref(false)
+const cardIndex = ref(1)
 
 const versions = [
-  { id: 'soft', name: '温柔版' },
-  { id: 'spicy', name: '刺激版' }
+  { id: 'lover0', name: '恋爱版', locked: false },
+  { id: 'lover1', name: '热恋版', locked: false },
+  { id: 'sex0', name: '同居版', locked: true },
+  { id: 'sex1', name: '进阶版', locked: true },
+  { id: 'sex2', name: '私密版', locked: true }
 ]
 
-const cards = {
-  soft: [
-    { content: '选择一个部位让对方按摩2分钟', isVipOnly: false },
-    { content: '说一句让对方心动的话', isVipOnly: false },
-    { content: '对视30秒，看谁先笑', isVipOnly: false },
-    { content: '给对方一个拥抱并说"我爱你"', isVipOnly: true }
-  ],
-  spicy: [
-    { content: '选择一个姿势尝试', isVipOnly: true },
-    { content: '说出对方最让你心动的一个瞬间', isVipOnly: true },
-    { content: '让对方做5个俯卧撑', isVipOnly: false },
-    { content: '尝试一个新的亲吻方式', isVipOnly: true }
-  ]
+const currentVersionId = ref('lover0')
+
+const tasks = {
+  lover0: ['牵手漫步', '深情对视', '互喂美食', '拥抱一分钟', '说出一件喜欢对方的事', '十指紧扣', '眉目传情'],
+  lover1: ['壁咚对方', '公主抱', '亲吻额头', '一起跳舞', '为对方按摩', '法式热吻', '情感对话'],
+  sex0: ['睡衣派对', '深夜聊天', '一起看电影', '互诉心事', '制造惊喜']
 }
 
-const currentCard = computed(() => {
-  const versionCards = cards[currentVersion.value as keyof typeof cards]
-  return versionCards[store.currentCardIndex % versionCards.length]
+const currentTask = computed(() => {
+  const versionTasks = tasks[currentVersionId.value as keyof typeof tasks] || tasks.lover0
+  const index = Math.floor(Math.random() * versionTasks.length)
+  return versionTasks[index]
 })
 
 function flipCard() {
-  store.flipCard()
-}
-
-function selectVersion(versionId: string) {
-  store.selectVersion(versionId as 'soft' | 'spicy')
-}
-
-function nextCard() {
-  store.flipCard()
-  setTimeout(() => store.nextCard(), 300)
+  isFlipped.value = !isFlipped.value
+  if (isFlipped.value) {
+    cardIndex.value = Math.floor(Math.random() * 100) + 1
+  }
 }
 
 function resetCard() {
-  store.reset()
+  isFlipped.value = false
+}
+
+function selectVersion(id: string) {
+  const ver = versions.find(v => v.id === id)
+  if (ver?.locked && !isVip) {
+    return
+  }
+  currentVersionId.value = id
+  isFlipped.value = false
 }
 </script>
 
@@ -113,7 +129,7 @@ function resetCard() {
 .page-header {
   padding: 40px 20px;
   text-align: center;
-  background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary) 100%);
+  background: var(--theme-gradient);
   color: white;
 }
 
@@ -123,42 +139,67 @@ function resetCard() {
   margin-bottom: 8px;
 }
 
+.page-header p {
+  opacity: 0.9;
+}
+
 .card-section {
   padding: 40px 20px;
 }
 
 .version-selector {
-  display: flex;
-  justify-content: center;
-  gap: 12px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
   margin-bottom: 32px;
 }
 
-.version-btn {
-  padding: 10px 24px;
+.version-scroll {
+  display: flex;
+  gap: 12px;
+  padding-bottom: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.version-chip {
+  flex-shrink: 0;
+  padding: 10px 20px;
   background: var(--card-bg);
-  border: 2px solid var(--card-border);
-  border-radius: 25px;
+  border: 1px solid var(--card-border);
+  border-radius: var(--theme-border-radius);
+  font-size: 0.9rem;
   color: var(--text);
-  font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
 }
 
-.version-btn.active {
+.version-chip:hover:not(:disabled) {
   border-color: var(--primary);
-  background: var(--primary);
+}
+
+.version-chip.active {
+  background: var(--theme-gradient);
   color: white;
+  border-color: transparent;
+}
+
+.version-chip.locked {
+  opacity: 0.6;
+}
+
+.version-chip.locked::after {
+  content: '🔒';
+  margin-left: 6px;
 }
 
 .card-area {
   display: flex;
   justify-content: center;
-  margin-bottom: 32px;
+  padding: 20px 0;
 }
 
 .flip-card {
-  width: 300px;
+  width: 280px;
   height: 400px;
   perspective: 1000px;
   cursor: pointer;
@@ -182,91 +223,126 @@ function resetCard() {
   width: 100%;
   height: 100%;
   backface-visibility: hidden;
+  border-radius: var(--theme-border-radius);
+  box-shadow: var(--theme-shadow);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  border-radius: var(--theme-border-radius);
-  box-shadow: var(--theme-shadow-hover);
+  padding: 24px;
+  text-align: center;
 }
 
 .flip-card-front {
-  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+  background: var(--theme-gradient);
   color: white;
 }
 
-.card-icon {
+.flip-card-front-icon {
   font-size: 4rem;
   margin-bottom: 16px;
+  animation: float 2s ease-in-out infinite;
 }
 
-.card-hint {
-  font-size: 0.9rem;
-  opacity: 0.8;
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.flip-card-front-text {
+  font-size: 1.2rem;
+  font-weight: 600;
 }
 
 .flip-card-back {
   background: var(--card-bg);
   transform: rotateY(180deg);
-  padding: 32px;
   border: 2px solid var(--card-border);
 }
 
-.card-content {
-  font-size: 1.2rem;
-  line-height: 1.6;
-  text-align: center;
-  color: var(--text);
+.flip-card-back-content {
+  writing-mode: vertical-rl;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--primary);
+  letter-spacing: 4px;
 }
 
-.vip-badge {
+.card-id {
   position: absolute;
-  top: 16px;
+  bottom: 16px;
   right: 16px;
-  padding: 4px 10px;
+  font-size: 0.8rem;
+  color: var(--text-light);
+}
+
+.action-buttons {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  margin-top: 32px;
+}
+
+.action-btn {
+  padding: 12px 24px;
+  border-radius: var(--theme-border-radius);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  border: none;
+}
+
+.action-btn-primary {
   background: var(--theme-gradient);
   color: white;
-  border-radius: 20px;
-  font-size: 0.75rem;
-  font-weight: 600;
+  box-shadow: var(--theme-shadow);
 }
 
-.card-controls {
-  display: flex;
-  justify-content: center;
-  gap: 16px;
-  margin-bottom: 24px;
+.action-btn-primary:hover {
+  transform: scale(1.05);
+  box-shadow: var(--theme-shadow-hover);
 }
 
-.control-btn {
-  padding: 12px 24px;
+.action-btn-secondary {
   background: var(--card-bg);
-  border: 1px solid var(--card-border);
-  border-radius: var(--theme-border-radius-sm);
   color: var(--text);
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
+  border: 1px solid var(--card-border);
 }
 
-.control-btn:hover {
+.action-btn-secondary:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.rules-section {
+  padding: 24px 20px;
   background: var(--background-secondary);
 }
 
-.control-btn.primary {
-  background: var(--primary);
-  border-color: var(--primary);
-  color: white;
-}
-
-.vip-hint {
+.rules-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 12px;
   text-align: center;
-  color: var(--text-light);
-  font-size: 0.9rem;
 }
 
-.vip-hint a {
-  color: var(--primary);
-  text-decoration: none;
+.rules-text {
+  font-size: 0.9rem;
+  color: var(--text-light);
+  line-height: 1.8;
+  text-align: center;
+}
+
+@media (max-width: 480px) {
+  .flip-card {
+    width: 240px;
+    height: 340px;
+  }
+
+  .flip-card-back-content {
+    font-size: 1.4rem;
+  }
 }
 </style>

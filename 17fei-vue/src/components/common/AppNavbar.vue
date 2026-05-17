@@ -2,8 +2,8 @@
   <nav class="navbar">
     <div class="navbar-inner container">
       <router-link to="/" class="logo">
-        <img src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💕</text></svg>" alt="17fei" />
-        <span>17fei</span>
+        <img src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💕</text></svg>" alt="Loving" />
+        <span>Loving</span>
       </router-link>
       <div class="nav-links hidden-md">
         <router-link to="/" class="nav-link" :class="{ active: route.path === '/' }">

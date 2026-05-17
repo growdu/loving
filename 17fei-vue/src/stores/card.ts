@@ -9,19 +9,13 @@ export interface CardVersion {
 }
 
 export const useCardStore = defineStore('card', () => {
-  const currentVersionId = ref('lover0')
+  const currentVersionId = ref('soft')
   const isFlipped = ref(false)
-  const currentTask = ref('')
+  const currentCardIndex = ref(0)
 
   const versions: CardVersion[] = [
-    { id: 'lover0', name: '恋爱版', locked: false, tasks: ['牵手漫步', '深情对视', '互喂美食', '拥抱一分钟', '说出一件喜欢对方的事'] },
-    { id: 'lover1', name: '热恋版', locked: false, tasks: ['壁咚对方', '公主抱', '亲吻额头', '一起跳舞', '为对方按摩'] },
-    { id: 'sex0', name: '同居版', locked: true, tasks: ['睡衣派对', '深夜聊天', '一起看电影', '互诉心事', '制造惊喜'] },
-    { id: 'sex1', name: '进阶版', locked: true, tasks: [] },
-    { id: 'sex2', name: '私密版', locked: true, tasks: [] },
-    { id: 'sm', name: 'SM版', locked: true, tasks: [] },
-    { id: 'huwai', name: '户外版', locked: true, tasks: [] },
-    { id: 'custom', name: '自定义', locked: true, tasks: [] }
+    { id: 'soft', name: '温柔版', locked: false, tasks: ['选择一个部位让对方按摩2分钟', '说一句让对方心动的话', '对视30秒看谁先笑', '给对方一个拥抱并说我爱你', '深情亲吻10秒'] },
+    { id: 'spicy', name: '刺激版', locked: false, tasks: ['选择一个姿势尝试', '说出对方最让你心动的一个瞬间', '让对方做5个俯卧撑', '尝试一个新的亲吻方式', '互相探索对方的敏感带'] }
   ]
 
   const currentVersion = computed(() =>
@@ -30,34 +24,44 @@ export const useCardStore = defineStore('card', () => {
 
   const currentTasks = computed(() => currentVersion.value.tasks)
 
+  const currentTask = computed(() => {
+    const tasks = currentTasks.value
+    if (tasks.length === 0) return ''
+    return tasks[currentCardIndex.value % tasks.length]
+  })
+
   function selectVersion(id: string) {
     currentVersionId.value = id
     isFlipped.value = false
+    currentCardIndex.value = 0
   }
 
   function flipCard(): string {
     isFlipped.value = !isFlipped.value
-    if (isFlipped.value && currentTasks.value.length > 0) {
-      const randomIndex = Math.floor(Math.random() * currentTasks.value.length)
-      currentTask.value = currentTasks.value[randomIndex]
-    }
     return currentTask.value
+  }
+
+  function nextCard() {
+    currentCardIndex.value++
+    isFlipped.value = false
   }
 
   function resetCard() {
     isFlipped.value = false
-    currentTask.value = ''
+    currentCardIndex.value = 0
   }
 
   return {
     currentVersionId,
     isFlipped,
+    currentCardIndex,
     currentTask,
     versions,
     currentVersion,
     currentTasks,
     selectVersion,
     flipCard,
+    nextCard,
     resetCard
   }
 })

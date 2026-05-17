@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import { useThemeStore } from './theme'
 
 export interface User {
   id: string
@@ -89,8 +90,3 @@ export const useUserStore = defineStore('user', () => {
     validateToken
   }
 })
-
-// 避免循环依赖 - 在函数内部延迟导入
-function useThemeStore() {
-  return require('./theme').useThemeStore()
-}
