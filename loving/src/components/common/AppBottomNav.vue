@@ -1,19 +1,19 @@
 <template>
   <nav class="bottom-nav">
     <router-link to="/" class="nav-item" :class="{ active: route.path === '/' }">
-      <span class="nav-icon">🏠</span>
+      <Home :size="20" :stroke-width="route.path === '/' ? 2.5 : 1.5" />
       <span>首页</span>
     </router-link>
     <router-link to="/positions" class="nav-item" :class="{ active: route.path === '/positions' }">
-      <span class="nav-icon">❤️</span>
+      <Heart :size="20" :stroke-width="route.path === '/positions' ? 2.5 : 1.5" />
       <span>姿势</span>
     </router-link>
     <router-link to="/card" class="nav-item" :class="{ active: route.path === '/card' }">
-      <span class="nav-icon">🎴</span>
+      <CreditCard :size="20" :stroke-width="route.path === '/card' ? 2.5 : 1.5" />
       <span>卡牌</span>
     </router-link>
     <router-link to="/member" class="nav-item" :class="{ active: route.path === '/member' }">
-      <span class="nav-icon">💎</span>
+      <User :size="20" :stroke-width="route.path === '/member' ? 2.5 : 1.5" />
       <span>我的</span>
     </router-link>
   </nav>
@@ -21,6 +21,7 @@
 
 <script setup lang="ts">
 import { useRoute } from 'vue-router'
+import { Home, Heart, CreditCard, User } from 'lucide-vue-next'
 
 const route = useRoute()
 </script>
@@ -64,5 +65,6 @@ const route = useRoute()
 
 .nav-icon {
   font-size: 1.3rem;
+  display: flex;
 }
 </style>

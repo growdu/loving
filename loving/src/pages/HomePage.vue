@@ -6,9 +6,9 @@
         <p class="hero-subtitle">专为情侣设计的情趣小游戏，支持多种设备，随时随地开启甜蜜互动</p>
 
         <div class="hero-badges">
-          <span class="badge"><span class="badge-icon">📱</span> 移动端适配</span>
-          <span class="badge"><span class="badge-icon">🎮</span> 多款游戏</span>
-          <span class="badge"><span class="badge-icon">❤️</span> 情侣专属</span>
+          <span class="badge"><Smartphone :size="16" class="badge-icon" /> 移动端适配</span>
+          <span class="badge"><Gamepad2 :size="16" class="badge-icon" /> 多款游戏</span>
+          <span class="badge"><Heart :size="16" class="badge-icon" /> 情侣专属</span>
         </div>
 
         <div class="hero-actions" v-if="!isLoggedIn">
@@ -33,7 +33,7 @@
             :description="game.description"
             :tag="game.tag"
             :tag-type="game.tagType"
-            :emoji="game.emoji"
+            :icon="game.icon"
           />
         </div>
       </div>
@@ -74,6 +74,7 @@
 import { useAuth } from '@/composables/useAuth'
 import DefaultLayout from '@/components/layout/DefaultLayout.vue'
 import GameCard from '@/components/game/GameCard.vue'
+import { Smartphone, Gamepad2, Heart, Palette, Sparkles, HeartHandshake, Shield, Dice5, CreditCard, Users, Bot } from 'lucide-vue-next'
 
 const { isLoggedIn } = useAuth()
 
@@ -81,7 +82,7 @@ const games = [
   {
     id: 'fxq',
     to: '/game/fxq',
-    emoji: '🎲',
+    icon: Dice5,
     title: '飞行棋',
     description: '经典飞行棋游戏，适合情侣一起游玩',
     tag: '热门',
@@ -90,7 +91,7 @@ const games = [
   {
     id: 'card',
     to: '/card',
-    emoji: '🃏',
+    icon: CreditCard,
     title: '亲密卡牌',
     description: '多种版本任选，从恋爱到情趣，满足各种口味',
     tag: '10+版本',
@@ -99,7 +100,7 @@ const games = [
   {
     id: 'positions',
     to: '/positions',
-    emoji: '💑',
+    icon: Users,
     title: '姿势卡牌',
     description: '解锁更多姿势，增加情趣体验',
     tag: '100+姿势',
@@ -108,13 +109,16 @@ const games = [
   {
     id: 'ai',
     to: '/ai',
-    emoji: '🤖',
+    icon: Bot,
     title: 'AI伴侣',
     description: '智能AI伴侣，懂你所需',
     tag: '新功能',
     tagType: 'new' as const
   }
 ]
+
+const badgeIcons = { smartphone: Smartphone, gamepad: Gamepad2, heart: Heart }
+const featureIcons = { palette: Palette, sparkles: Sparkles, handshake: HeartHandshake, shield: Shield }
 </script>
 
 <style scoped>

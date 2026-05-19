@@ -1,10 +1,10 @@
 <template>
   <router-link :to="to" class="game-card">
     <div class="game-card-img">
-      <img v-if="image" :src="image" :alt="title" class="game-img" />
-      <span v-else class="game-emoji">{{ emoji }}</span>
+      <component v-if="icon" :is="icon" :size="64" class="game-icon" />
+      <img v-else-if="image" :src="image" :alt="title" class="game-img" />
       <div class="game-overlay">
-        <span class="play-icon">▶</span>
+        <Play :size="24" class="play-icon" />
       </div>
     </div>
     <div class="game-card-content">
@@ -16,11 +16,12 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, type Component } from 'vue'
+import { Play } from 'lucide-vue-next'
 
 const props = defineProps<{
   to: string
-  emoji?: string
+  icon?: Component
   image?: string
   title: string
   description: string
@@ -71,12 +72,12 @@ const tagColor = computed(() => props.tagType || 'default')
   object-fit: cover;
 }
 
-.game-emoji {
-  font-size: 4rem;
+.game-icon {
+  color: white;
   transition: transform 0.3s;
 }
 
-.game-card:hover .game-emoji {
+.game-card:hover .game-icon {
   transform: scale(1.1);
 }
 
@@ -99,7 +100,6 @@ const tagColor = computed(() => props.tagType || 'default')
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 24px;
   color: var(--primary);
   padding-left: 4px;
 }

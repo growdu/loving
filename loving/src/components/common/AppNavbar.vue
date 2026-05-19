@@ -2,7 +2,7 @@
   <nav class="navbar">
     <div class="navbar-inner container">
       <router-link to="/" class="logo">
-        <img src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💕</text></svg>" alt="Loving" />
+        <Heart :size="32" fill="currentColor" style="color: var(--primary);" />
         <span>Loving</span>
       </router-link>
       <div class="nav-links hidden-md">
@@ -26,6 +26,7 @@
 <script setup lang="ts">
 import { useRoute } from 'vue-router'
 import ThemeSwitcher from '@/components/theme/ThemeSwitcher.vue'
+import { Heart } from 'lucide-vue-next'
 
 const route = useRoute()
 </script>

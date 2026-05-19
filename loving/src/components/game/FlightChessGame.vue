@@ -1,80 +1,104 @@
 <template>
   <div class="fxq-game">
     <!-- 顶部标题 -->
-    <div class="game-title">
-      <span class="title-icon">🎮</span>
+    <div class="title">
+      <Dice5 :size="32" style="color: #667eea;" />
       <span>飞行棋</span>
     </div>
 
     <!-- 第一步：选择主题 -->
-    <div v-if="!currentTheme" class="step-section">
-      <div class="step-header">
-        <span class="step-badge">1</span>
-        <span class="step-label">选择主题</span>
+    <transition name="step-fade">
+      <div v-if="!currentTheme" class="step-section">
+        <div class="step-header">
+          <div class="step-num">1</div>
+          <span class="step-label">选择主题</span>
+        </div>
+        <div class="theme-grid">
+          <button
+            v-for="theme in themes"
+            :key="theme.id"
+            @click="selectTheme(theme.id)"
+            class="theme-btn"
+            :class="{ active: currentTheme === theme.id }"
+            :style="{ '--theme-color': theme.color }"
+          >
+            <div class="theme-icon">
+              <component :is="theme.icon" :size="48" :style="{ color: theme.color }" />
+            </div>
+            <span class="theme-text">{{ theme.name }}</span>
+          </button>
+        </div>
       </div>
-      <div class="theme-grid">
-        <button
-          v-for="theme in themes"
-          :key="theme.id"
-          @click="selectTheme(theme.id)"
-          class="theme-btn"
-          :class="{ active: currentTheme === theme.id }"
-        >
-          <span class="theme-emoji">{{ theme.icon }}</span>
-          <span class="theme-text">{{ theme.name }}</span>
-        </button>
-      </div>
-    </div>
+    </transition>
 
     <!-- 第二步：选择模式 -->
-    <div v-if="currentTheme && !currentMode" class="step-section">
-      <div class="step-header">
-        <span class="step-badge">2</span>
-        <span class="step-label">选择模式</span>
+    <transition name="step-fade">
+      <div v-if="currentTheme && !currentMode" class="step-section">
+        <div class="step-header">
+          <div class="step-num">2</div>
+          <span class="step-label">选择模式</span>
+        </div>
+        <div class="mode-grid">
+          <button
+            v-for="mode in modes"
+            :key="mode.id"
+            @click="selectMode(mode.id)"
+            class="mode-btn"
+            :class="{ active: currentMode === mode.id }"
+            :style="{ '--mode-color': mode.color }"
+          >
+            <span class="mode-icon">
+              <component :is="mode.icon" :size="20" :style="{ color: mode.color }" />
+            </span>
+            <span class="mode-text">{{ mode.name }}</span>
+          </button>
+        </div>
       </div>
-      <div class="mode-grid">
-        <button
-          v-for="mode in modes"
-          :key="mode.id"
-          @click="selectMode(mode.id)"
-          class="mode-btn"
-          :class="{ active: currentMode === mode.id }"
-        >
-          <span class="mode-emoji">{{ mode.icon }}</span>
-          <span class="mode-text">{{ mode.name }}</span>
-        </button>
-      </div>
-    </div>
+    </transition>
 
     <!-- 第三步：开始游戏 -->
-    <div v-if="currentTheme && currentMode && !gameStarted" class="step-section">
-      <button @click="startGame" class="start-btn">
-        🎮 开始游戏
-      </button>
-    </div>
+    <transition name="step-fade">
+      <div v-if="currentTheme && currentMode && !gameStarted" class="step-section">
+        <button @click="startGame" class="start-btn">
+          <Play :size="24" />
+          开始游戏
+        </button>
+      </div>
+    </transition>
 
     <!-- 游戏区域 -->
     <div v-if="gameStarted" class="game-area">
       <!-- 当前玩家指示器 -->
       <div class="current-player" :class="'player-' + currentPlayer">
-        <span class="player-icon">{{ currentPlayer === 1 ? '👨' : '👩' }}</span>
-        <span class="player-name">{{ currentPlayer === 1 ? '男方' : '女方' }}</span>
-        <span class="turn-hint">的回合</span>
+        <div class="player-avatar">
+          <User :size="32" :style="{ color: currentPlayer === 1 ? '#3498db' : '#e91e63' }" />
+        </div>
+        <div class="player-info">
+          <span class="player-name">{{ currentPlayer === 1 ? '男方' : '女方' }}</span>
+          <span class="turn-hint">回合</span>
+        </div>
       </div>
 
       <!-- 骰子显示 -->
       <div class="dice-container">
-        <transition name="dice-pop">
-          <div v-if="lastRoll" class="dice-result" :class="'dice-' + lastRoll">
-            <div class="dice-body">
-              <span v-for="n in lastRoll" :key="n" class="dice-dot"></span>
+        <transition name="dice-flip">
+          <div v-if="lastRoll" class="dice" :class="'dice-' + lastRoll">
+            <div class="dice-face">
+              <div v-for="i in getDiceDots(lastRoll)" :key="i" class="dice-dot"></div>
+            </div>
+          </div>
+          <div v-else-if="rolling" class="dice rolling-dice">
+            <div class="dice-face">
+              <div class="dice-dot"></div>
+              <div class="dice-dot"></div>
+              <div class="dice-dot"></div>
             </div>
           </div>
         </transition>
       </div>
 
       <!-- 棋盘 -->
-      <div class="board-container">
+      <div class="board-wrapper">
         <div class="board">
           <!-- 格子 -->
           <div
@@ -82,27 +106,16 @@
             :key="index"
             class="cell"
             :class="{
-              active: getPlayerPos(1) === index + 1,
-              player1: getPlayerPos(1) === index + 1,
-              player2: getPlayerPos(2) === index + 1,
-              both: getPlayerPos(1) === index + 1 && getPlayerPos(2) === index + 1,
-              vip: cell.vipOnly
+              'player1': getPlayerPos(1) === index + 1,
+              'player2': getPlayerPos(2) === index + 1,
+              'both': getPlayerPos(1) === index + 1 && getPlayerPos(2) === index + 1,
+              'vip': cell.vipOnly
             }"
           >
             <span class="cell-num">{{ index + 1 }}</span>
-            <span v-if="cell.vipOnly" class="vip-flag">🔥</span>
-          </div>
-
-          <!-- 起点 -->
-          <div class="special-cell start">
-            <span class="special-icon">🏁</span>
-            <span class="special-label">起点</span>
-          </div>
-
-          <!-- 终点 -->
-          <div class="special-cell end">
-            <span class="special-icon">🏆</span>
-            <span class="special-label">终点</span>
+            <div v-if="cell.vipOnly" class="vip-badge">
+              <Star :size="12" fill="#f1c40f" style="color: #f1c40f;" />
+            </div>
           </div>
 
           <!-- 玩家1棋子 -->
@@ -111,7 +124,10 @@
             class="piece piece1"
             :style="getPieceStyle(1)"
           >
-            <span class="piece-icon">👨</span>
+            <svg viewBox="0 0 24 24" width="28" height="28">
+              <circle cx="12" cy="8" r="5" fill="#3498db"/>
+              <path d="M12 13c-5 0-9 3-9 7h18c0-4-4-7-9-7z" fill="#3498db"/>
+            </svg>
           </div>
 
           <!-- 玩家2棋子 -->
@@ -120,30 +136,51 @@
             class="piece piece2"
             :style="getPieceStyle(2)"
           >
-            <span class="piece-icon">👩</span>
+            <svg viewBox="0 0 24 24" width="28" height="28">
+              <circle cx="12" cy="8" r="5" fill="#e91e63"/>
+              <path d="M12 13c-5 0-9 3-9 7h18c0-4-4-7-9-7z" fill="#e91e63"/>
+            </svg>
           </div>
+        </div>
+
+        <!-- 起点终点标记 -->
+        <div class="corner-label start-label">
+          <svg viewBox="0 0 24 24" width="16" height="16">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" fill="#2ecc71"/>
+            <path d="M14 2v6h6" fill="#27ae60"/>
+          </svg>
+          起点
+        </div>
+        <div class="corner-label end-label">
+          <svg viewBox="0 0 24 24" width="16" height="16">
+            <path d="M12 2l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z" fill="#f1c40f"/>
+          </svg>
+          终点
         </div>
       </div>
 
       <!-- 任务卡片 -->
-      <transition name="task-slide">
+      <transition name="task-bounce">
         <div v-if="currentTask && showTask" class="task-panel">
           <div class="task-icon" v-html="currentTask.icon"></div>
           <p class="task-desc">{{ currentTask.text }}</p>
-          <span v-if="currentTask.vipOnly" class="task-vip">私密任务</span>
+          <span v-if="currentTask.vipOnly" class="task-vip">
+            <Star :size="14" fill="currentColor" />
+            私密任务
+          </span>
         </div>
       </transition>
 
       <!-- 当前状态 -->
       <div class="status-bar">
         <div class="player-score" :class="{ active: currentPlayer === 1 }">
-          <span class="score-icon">👨</span>
+          <User :size="24" style="color: #3498db;" />
           <span class="score-label">男方</span>
           <span class="score-pos">{{ getPlayerPos(1) === 0 ? '起点' : '第' + getPlayerPos(1) + '格' }}</span>
         </div>
         <div class="vs-badge">VS</div>
         <div class="player-score" :class="{ active: currentPlayer === 2 }">
-          <span class="score-icon">👩</span>
+          <User :size="24" style="color: #e91e63;" />
           <span class="score-label">女方</span>
           <span class="score-pos">{{ getPlayerPos(2) === 0 ? '起点' : '第' + getPlayerPos(2) + '格' }}</span>
         </div>
@@ -156,7 +193,8 @@
           @click="completeTask"
           class="control-btn complete"
         >
-          ✅ 完成
+          <CheckCircle :size="20" />
+          完成
         </button>
         <button
           v-else-if="!gameOver"
@@ -164,14 +202,20 @@
           :disabled="rolling"
           class="control-btn roll"
         >
-          {{ rolling ? '🎲 投掷中...' : '🎲 投骰子' }}
+          <Dice5 :size="22" />
+          {{ rolling ? '投掷中...' : '投骰子' }}
         </button>
 
         <!-- 游戏结束 -->
         <div v-if="gameOver" class="game-over">
-          <span class="winner-icon">🎉</span>
+          <div class="winner-crown">
+            <Crown :size="48" fill="#f1c40f" style="color: #f1c40f;" />
+          </div>
           <span class="winner-name">{{ winner === 1 ? '男方' : '女方' }}获胜!</span>
-          <button @click="resetGame" class="restart-btn">🔄 再来一局</button>
+          <button @click="resetGame" class="restart-btn">
+            <RotateCcw :size="18" />
+            再来一局
+          </button>
         </div>
       </div>
     </div>
@@ -180,24 +224,25 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { Heart, Moon, Flame, Star, Circle, Home, Users, Crown, Sparkles, Dice5, Play, RotateCcw, CheckCircle, XCircle, User } from 'lucide-vue-next'
 
 const totalCells = 16
 
-// 主题
+// 主题 - 使用Lucide图标
 const themes = [
-  { id: 'heart', name: '甜蜜', icon: '💕' },
-  { id: 'moon', name: '浪漫', icon: '🌙' },
-  { id: 'fire', name: '热情', icon: '🔥' },
-  { id: 'star', name: '星光', icon: '⭐' }
+  { id: 'heart', name: '甜蜜', color: '#e74c3c', icon: Heart },
+  { id: 'moon', name: '浪漫', color: '#9b59b6', icon: Moon },
+  { id: 'fire', name: '热情', color: '#e67e22', icon: Flame },
+  { id: 'star', name: '星光', color: '#f1c40f', icon: Star }
 ]
 
 // 模式
 const modes = [
-  { id: 'normal', name: '普通', icon: '💫' },
-  { id: 'love', name: '恋爱', icon: '💑' },
-  { id: 'hot', name: '热恋', icon: '🔥' },
-  { id: 'cohabit', name: '同居', icon: '🏠' },
-  { id: 'married', name: '夫妻', icon: '💍' }
+  { id: 'normal', name: '普通', color: '#3498db', icon: Circle },
+  { id: 'love', name: '恋爱', color: '#e91e63', icon: Heart },
+  { id: 'hot', name: '热恋', color: '#e74c3c', icon: Flame },
+  { id: 'cohabit', name: '同居', color: '#27ae60', icon: Home },
+  { id: 'married', name: '夫妻', color: '#8e44ad', icon: Users }
 ]
 
 // SVG图标
@@ -335,6 +380,18 @@ const currentTask = computed(() => {
   return null
 })
 
+function getDiceDots(n: number): number[] {
+  const patterns: Record<number, number[]> = {
+    1: [1],
+    2: [1, 2],
+    3: [1, 2, 3],
+    4: [1, 2, 3, 4],
+    5: [1, 2, 3, 4, 5],
+    6: [1, 2, 3, 4, 5, 6]
+  }
+  return patterns[n] || []
+}
+
 function getPlayerPos(player: number) {
   return player === 1 ? pos1.value : pos2.value
 }
@@ -344,10 +401,9 @@ function getPieceStyle(player: number) {
   if (pos <= 0) return { display: 'none' }
   const row = Math.floor((pos - 1) / 4)
   const col = (pos - 1) % 4
-  const offset = player === 1 ? '5px' : '35px'
   return {
-    top: `${15 + row * 72}px`,
-    left: `${15 + col * 72 + (player === 2 ? 20 : 0)}px`
+    top: `${20 + row * 70}px`,
+    left: `${20 + col * 70 + (player === 2 ? 22 : 0)}px`
   }
 }
 
@@ -443,49 +499,60 @@ function isWaitingTask() {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 20px;
+  padding: 24px;
   box-sizing: border-box;
 }
 
+/* 标题 */
 .game-title {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   font-size: 1.8rem;
   font-weight: bold;
   color: white;
-  margin-bottom: 20px;
-  text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+  margin-bottom: 28px;
+  text-shadow: 0 2px 15px rgba(0,0,0,0.2);
 }
 
 .title-icon {
-  font-size: 2rem;
+  display: flex;
+  align-items: center;
 }
 
+.title-decoration {
+  width: 40px;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
+  border-radius: 2px;
+}
+
+/* 步骤区域 */
 .step-section {
   width: 100%;
-  max-width: 500px;
-  margin-bottom: 20px;
+  max-width: 480px;
+  margin-bottom: 24px;
 }
 
 .step-header {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 12px;
+  gap: 12px;
+  margin-bottom: 16px;
 }
 
-.step-badge {
-  width: 28px;
-  height: 28px;
-  background: white;
+.step-num {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #fff, #f0f0f0);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   color: #667eea;
   font-weight: bold;
-  font-size: 0.9rem;
+  font-size: 1rem;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.1);
 }
 
 .step-label {
@@ -494,45 +561,54 @@ function isWaitingTask() {
   color: white;
 }
 
+/* 主题选择 */
 .theme-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
+  gap: 14px;
 }
 
 .theme-btn {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
-  padding: 20px;
+  gap: 10px;
+  padding: 24px 20px;
   background: rgba(255,255,255,0.95);
   border: none;
-  border-radius: 16px;
+  border-radius: 20px;
   cursor: pointer;
-  transition: all 0.3s;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.1);
 }
 
 .theme-btn:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 12px 30px rgba(0,0,0,0.15);
 }
 
 .theme-btn.active {
-  background: linear-gradient(135deg, #e74c3c, #ff6b6b);
+  background: linear-gradient(135deg, var(--theme-color), color-mix(in srgb, var(--theme-color) 80%, black));
   color: white;
 }
 
-.theme-emoji {
-  font-size: 2.5rem;
+.theme-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.3s;
+}
+
+.theme-btn:hover .theme-icon {
+  transform: scale(1.1);
 }
 
 .theme-text {
-  font-size: 1rem;
+  font-size: 1.05rem;
   font-weight: 600;
 }
 
+/* 模式选择 */
 .mode-grid {
   display: flex;
   flex-wrap: wrap;
@@ -544,25 +620,28 @@ function isWaitingTask() {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 12px 20px;
+  padding: 14px 22px;
   background: rgba(255,255,255,0.95);
   border: none;
-  border-radius: 25px;
+  border-radius: 30px;
   cursor: pointer;
   transition: all 0.3s;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
 }
 
 .mode-btn:hover {
   transform: scale(1.05);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.15);
 }
 
 .mode-btn.active {
-  background: linear-gradient(135deg, #e74c3c, #ff6b6b);
+  background: linear-gradient(135deg, var(--mode-color), color-mix(in srgb, var(--mode-color) 80%, black));
   color: white;
 }
 
-.mode-emoji {
-  font-size: 1.3rem;
+.mode-icon {
+  display: flex;
+  align-items: center;
 }
 
 .mode-text {
@@ -570,40 +649,53 @@ function isWaitingTask() {
   font-weight: 600;
 }
 
+/* 开始按钮 */
 .start-btn {
   width: 100%;
-  padding: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 20px;
   background: linear-gradient(135deg, #2ecc71, #27ae60);
   border: none;
-  border-radius: 16px;
+  border-radius: 18px;
   color: white;
   font-size: 1.2rem;
   font-weight: bold;
   cursor: pointer;
   transition: all 0.3s;
-  box-shadow: 0 6px 20px rgba(46, 204, 113, 0.4);
+  box-shadow: 0 8px 25px rgba(46, 204, 113, 0.4);
 }
 
 .start-btn:hover {
   transform: scale(1.02);
+  box-shadow: 0 12px 35px rgba(46, 204, 113, 0.5);
 }
 
+.btn-icon {
+  display: flex;
+  align-items: center;
+}
+
+/* 游戏区域 */
 .game-area {
   width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 15px;
+  gap: 16px;
 }
 
+/* 当前玩家指示器 */
 .current-player {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 12px 24px;
+  gap: 12px;
+  padding: 14px 28px;
   background: rgba(255,255,255,0.95);
-  border-radius: 30px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  border-radius: 40px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.1);
 }
 
 .current-player.player-1 {
@@ -616,8 +708,14 @@ function isWaitingTask() {
   color: white;
 }
 
-.player-icon {
-  font-size: 1.8rem;
+.player-avatar {
+  display: flex;
+  align-items: center;
+}
+
+.player-info {
+  display: flex;
+  flex-direction: column;
 }
 
 .player-name {
@@ -626,45 +724,46 @@ function isWaitingTask() {
 }
 
 .turn-hint {
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   opacity: 0.9;
 }
 
+/* 骰子 */
 .dice-container {
-  height: 80px;
+  height: 90px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.dice-result {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.dice {
+  perspective: 200px;
 }
 
-.dice-body {
-  width: 60px;
-  height: 60px;
-  background: white;
-  border-radius: 12px;
+.dice-face {
+  width: 64px;
+  height: 64px;
+  background: linear-gradient(145deg, #ffffff, #f0f0f0);
+  border-radius: 14px;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   grid-template-rows: repeat(3, 1fr);
-  gap: 4px;
+  gap: 3px;
   padding: 8px;
-  box-shadow: 0 6px 25px rgba(0,0,0,0.2);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.25);
 }
 
 .dice-dot {
-  width: 12px;
-  height: 12px;
-  background: #e74c3c;
+  width: 14px;
+  height: 14px;
+  background: linear-gradient(135deg, #e74c3c, #c0392b);
   border-radius: 50%;
   align-self: center;
   justify-self: center;
+  box-shadow: inset 0 -2px 4px rgba(0,0,0,0.2);
 }
 
+/* 骰子点数位置 */
 .dice-1 .dice-dot:nth-child(1) { grid-area: 2 / 2; }
 .dice-2 .dice-dot:nth-child(1) { grid-area: 1 / 1; }
 .dice-2 .dice-dot:nth-child(2) { grid-area: 3 / 3; }
@@ -687,51 +786,96 @@ function isWaitingTask() {
 .dice-6 .dice-dot:nth-child(5) { grid-area: 3 / 1; }
 .dice-6 .dice-dot:nth-child(6) { grid-area: 3 / 3; }
 
-.dice-pop-enter-active {
-  animation: dice-pop 0.4s ease;
+.rolling-dice {
+  animation: dice-roll 0.15s infinite alternate;
 }
 
-@keyframes dice-pop {
-  0% { transform: scale(0) rotate(-180deg); }
-  50% { transform: scale(1.2) rotate(10deg); }
-  100% { transform: scale(1) rotate(0deg); }
+@keyframes dice-roll {
+  0% { transform: rotate(-5deg) scale(0.95); }
+  100% { transform: rotate(5deg) scale(1.05); }
 }
 
-.board-container {
-  padding: 15px;
+.dice-flip-enter-active {
+  animation: dice-flip 0.5s ease-out;
+}
+
+@keyframes dice-flip {
+  0% { transform: rotateY(180deg) scale(0.5); opacity: 0; }
+  100% { transform: rotateY(0) scale(1); opacity: 1; }
+}
+
+/* 棋盘 */
+.board-wrapper {
+  position: relative;
+  padding: 20px;
+  padding-top: 35px;
   background: linear-gradient(135deg, #ffecd2, #fcb69f);
+  border-radius: 24px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.2);
+}
+
+.corner-label {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  background: rgba(255,255,255,0.95);
   border-radius: 20px;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #666;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+}
+
+.start-label {
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #27ae60;
+}
+
+.end-label {
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #f39c12;
 }
 
 .board {
-  width: 320px;
-  height: 320px;
-  background: linear-gradient(135deg, #fff5f5, #fff0f5);
-  border-radius: 16px;
+  width: 300px;
+  height: 300px;
+  background: linear-gradient(135deg, #fff9f9, #fff5f5);
+  border-radius: 18px;
   position: relative;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   grid-template-rows: repeat(4, 1fr);
-  gap: 4px;
+  gap: 6px;
   padding: 8px;
 }
 
 .cell {
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 12px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   position: relative;
   transition: all 0.3s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.cell:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
 .cell-num {
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   font-weight: bold;
-  color: #666;
+  color: #999;
 }
 
 .cell.player1 {
@@ -759,58 +903,21 @@ function isWaitingTask() {
 }
 
 .cell.vip {
-  border: 2px solid #ff6b6b;
+  border: 2px solid #f1c40f;
 }
 
-.vip-flag {
+.vip-badge {
   position: absolute;
-  top: 2px;
-  right: 2px;
-  font-size: 0.6rem;
+  top: 4px;
+  right: 4px;
 }
 
-.special-cell {
-  position: absolute;
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  z-index: 5;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.15);
-}
-
-.special-cell.start {
-  background: linear-gradient(135deg, #e74c3c, #c0392b);
-  top: -25px;
-  left: 50%;
-  transform: translateX(-50%);
-  color: white;
-}
-
-.special-cell.end {
-  background: linear-gradient(135deg, #f1c40f, #f39c12);
-  bottom: -25px;
-  left: 50%;
-  transform: translateX(-50%);
-  color: white;
-}
-
-.special-icon {
-  font-size: 1.3rem;
-}
-
-.special-label {
-  font-size: 0.6rem;
-  font-weight: bold;
-}
-
+/* 棋子 */
 .piece {
   position: absolute;
   z-index: 10;
   transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  filter: drop-shadow(0 3px 6px rgba(0,0,0,0.3));
 }
 
 .piece1 {
@@ -821,25 +928,23 @@ function isWaitingTask() {
   z-index: 11;
 }
 
-.piece-icon {
-  font-size: 1.8rem;
-  display: block;
-  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
-}
-
+/* 任务卡片 */
 .task-panel {
   background: white;
-  border-radius: 20px;
-  padding: 20px 30px;
+  border-radius: 24px;
+  padding: 24px 32px;
   text-align: center;
-  box-shadow: 0 8px 30px rgba(0,0,0,0.15);
-  max-width: 300px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+  max-width: 320px;
 }
 
 .task-icon {
-  width: 50px;
-  height: 50px;
-  margin: 0 auto 10px;
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .task-icon :deep(svg) {
@@ -848,41 +953,44 @@ function isWaitingTask() {
 }
 
 .task-desc {
-  font-size: 1.1rem;
+  font-size: 1.15rem;
   font-weight: 600;
   color: #333;
-  margin: 0 0 8px;
+  margin: 0 0 10px;
+  line-height: 1.4;
 }
 
 .task-vip {
-  display: inline-block;
-  padding: 4px 12px;
-  background: linear-gradient(135deg, #ff6b6b, #ee2952);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 14px;
+  background: linear-gradient(135deg, #f1c40f, #f39c12);
   color: white;
-  border-radius: 15px;
+  border-radius: 18px;
   font-size: 0.8rem;
   font-weight: bold;
 }
 
-.task-slide-enter-active,
-.task-slide-leave-active {
-  transition: all 0.3s ease;
+.task-bounce-enter-active {
+  animation: task-bounce 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.task-slide-enter-from,
-.task-slide-leave-to {
-  opacity: 0;
-  transform: translateY(-20px);
+@keyframes task-bounce {
+  0% { transform: scale(0.5); opacity: 0; }
+  60% { transform: scale(1.1); }
+  100% { transform: scale(1); opacity: 1; }
 }
 
+/* 状态栏 */
 .status-bar {
   display: flex;
   align-items: center;
   gap: 20px;
-  padding: 15px 25px;
+  padding: 16px 28px;
   background: rgba(255,255,255,0.95);
-  border-radius: 20px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  border-radius: 24px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.1);
 }
 
 .player-score {
@@ -890,18 +998,14 @@ function isWaitingTask() {
   flex-direction: column;
   align-items: center;
   gap: 4px;
-  padding: 10px 20px;
-  border-radius: 15px;
+  padding: 12px 22px;
+  border-radius: 16px;
   transition: all 0.3s;
 }
 
 .player-score.active {
   background: linear-gradient(135deg, #667eea, #764ba2);
   color: white;
-}
-
-.score-icon {
-  font-size: 1.5rem;
 }
 
 .score-label {
@@ -915,27 +1019,31 @@ function isWaitingTask() {
 }
 
 .vs-badge {
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   font-weight: bold;
   color: #667eea;
 }
 
+/* 控制按钮 */
 .control-area {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
 
 .control-btn {
-  padding: 16px 50px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 48px;
   border: none;
-  border-radius: 35px;
-  font-size: 1.15rem;
+  border-radius: 40px;
+  font-size: 1.1rem;
   font-weight: bold;
   cursor: pointer;
   transition: all 0.3s;
-  box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+  box-shadow: 0 6px 25px rgba(0,0,0,0.2);
 }
 
 .control-btn.roll {
@@ -945,6 +1053,7 @@ function isWaitingTask() {
 
 .control-btn.roll:hover:not(:disabled) {
   transform: scale(1.05);
+  box-shadow: 0 10px 35px rgba(231, 76, 60, 0.4);
 }
 
 .control-btn.roll:disabled {
@@ -967,15 +1076,16 @@ function isWaitingTask() {
   transform: scale(1.05);
 }
 
+/* 游戏结束 */
 .game-over {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
-  padding: 25px 40px;
+  gap: 12px;
+  padding: 28px 45px;
   background: linear-gradient(135deg, #f1c40f, #f39c12);
-  border-radius: 20px;
-  animation: celebrate 0.5s ease;
+  border-radius: 24px;
+  animation: celebrate 0.6s ease;
 }
 
 @keyframes celebrate {
@@ -984,24 +1094,49 @@ function isWaitingTask() {
   100% { transform: scale(1); opacity: 1; }
 }
 
-.winner-icon {
-  font-size: 3rem;
+.winner-crown {
+  animation: crown-bounce 1s ease infinite;
+}
+
+@keyframes crown-bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
 }
 
 .winner-name {
-  font-size: 1.3rem;
+  font-size: 1.4rem;
   font-weight: bold;
   color: white;
 }
 
 .restart-btn {
-  padding: 12px 30px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 32px;
   background: white;
   border: none;
-  border-radius: 25px;
+  border-radius: 28px;
   font-size: 1rem;
   font-weight: bold;
   cursor: pointer;
   color: #f39c12;
+  transition: all 0.3s;
+}
+
+.restart-btn:hover {
+  transform: scale(1.05);
+}
+
+/* 过渡动画 */
+.step-fade-enter-active,
+.step-fade-leave-active {
+  transition: all 0.3s ease;
+}
+
+.step-fade-enter-from,
+.step-fade-leave-to {
+  opacity: 0;
+  transform: translateY(20px);
 }
 </style>
