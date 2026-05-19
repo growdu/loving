@@ -3,7 +3,7 @@
     <section class="page-header">
       <div class="container">
         <h1>亲密卡牌</h1>
-        <p>考验默契的时刻到了</p>
+        <p>抽取属于你们的甜蜜任务</p>
       </div>
     </section>
 
@@ -12,7 +12,7 @@
         <div class="version-selector">
           <div class="version-scroll">
             <button
-              v-for="ver in versions"
+              v-for="ver in allVersions"
               :key="ver.id"
               @click="selectVersion(ver.id)"
               class="version-chip"
@@ -23,7 +23,9 @@
               :disabled="ver.locked && !isVip"
             >
               {{ ver.name }}
-              <span v-if="ver.locked && !isVip" class="lock-icon">🔒</span>
+              <span v-if="ver.locked && !isVip" class="lock-icon">
+                <Lock :size="12" />
+              </span>
             </button>
           </div>
         </div>
@@ -32,20 +34,31 @@
           <div
             class="flip-card"
             :class="{ flipped: isFlipped }"
-            @click="flipCard"
+            @click="handleCardClick"
           >
             <div class="flip-card-inner">
               <div class="flip-card-front">
-                <div class="flip-card-front-icon">
-                  <svg viewBox="0 0 24 24" width="64" height="64">
-                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" fill="currentColor"/>
-                  </svg>
+                <div class="card-bg-image" :style="{ backgroundImage: `url(${currentImage})` }"></div>
+                <div class="flip-card-front-content">
+                  <div class="flip-card-front-icon">
+                    <Heart :size="48" fill="currentColor" />
+                  </div>
+                  <div class="flip-card-front-text">点击抽取任务</div>
+                  <div class="version-badge">{{ currentVersion?.name }}</div>
                 </div>
-                <div class="flip-card-front-text">点击抽取任务</div>
               </div>
               <div class="flip-card-back">
-                <div class="flip-card-back-content">{{ currentTask }}</div>
-                <div class="card-id">#{{ cardIndex }}</div>
+                <div class="card-bg-image blur" :style="{ backgroundImage: `url(${currentImage})` }"></div>
+                <div class="flip-card-back-content">
+                  <div class="task-text">{{ currentTask }}</div>
+                </div>
+                <div class="card-footer">
+                  <div class="card-id">#{{ String(currentCardIndex + 1).padStart(2, '0') }}</div>
+                  <div v-if="currentVersion?.locked" class="vip-tag">
+                    <Star :size="12" fill="currentColor" />
+                    私密
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -53,9 +66,11 @@
 
         <div class="action-buttons">
           <button class="action-btn action-btn-secondary" @click="resetCard">
+            <RotateCcw :size="18" />
             重置
           </button>
-          <button class="action-btn action-btn-primary" @click="flipCard">
+          <button class="action-btn action-btn-primary" @click="nextCard">
+            <Shuffle :size="18" />
             {{ isFlipped ? '再抽一张' : '翻转' }}
           </button>
         </div>
@@ -75,231 +90,159 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { useCardStore } from '@/stores/card'
-import { useAuth } from '@/composables/useAuth'
+import { computed } from 'vue'
+import { Heart, Lock, Star, RotateCcw, Shuffle } from 'lucide-vue-next'
+import { useCardSystem } from '@/composables/useCardSystem'
 import DefaultLayout from '@/components/layout/DefaultLayout.vue'
 
-const store = useCardStore()
-const { isVip } = useAuth()
+const {
+  allVersions,
+  currentVersion,
+  currentVersionId,
+  currentTasks,
+  currentTask,
+  currentCardIndex,
+  isFlipped,
+  isVip,
+  selectVersion,
+  flipCard,
+  nextCard,
+  resetCard
+} = useCardSystem()
 
-const isFlipped = ref(false)
-const cardIndex = ref(1)
-
-const versions = [
-  { id: 'lover0', name: '恋爱版', locked: false },
-  { id: 'lover1', name: '热恋版', locked: false },
-  { id: 'sex0', name: '同居版', locked: true },
-  { id: 'sex1', name: '进阶版', locked: true },
-  { id: 'sex2', name: '私密版', locked: true },
-  { id: 'sm', name: 'SM版', locked: true },
-  { id: 'huwai', name: '户外版', locked: true },
-  { id: 'nvpu', name: '女扑版', locked: true },
-  { id: 'nanpu', name: '男扑版', locked: true }
-]
-
-const currentVersionId = ref('lover0')
-
-const tasks: Record<string, string[]> = {
-  lover0: [
-    '学猫叫三声', '一起恶搞自拍', '给对方说悄悄话', '给对方按小腿1分钟', '对视5秒', '喂对方喝水', '手牵手30秒', '拥抱30秒', '对视5秒',
-    '尝试接吻的感觉', '说说初次见面的感受', '手牵手一分钟', '对方闭上眼睛给你涂口红', '一起给对方按摩', '猪八戒背媳妇', '摸对方耳朵2秒', '摸对方头10秒',
-    '给对方唱首歌', '一起喝一杯水', '尝试接吻的感觉', '拍一段表白的视频留作纪念', '给对方梳头发', '对方站着自己跪着喂食物', '给对方按摩捶背1分钟', '学猫叫三声',
-    '亲吻对方手背30秒', '拥抱一分钟', '对视5秒', '一起恶搞自拍', '亲吻一下对方的手', '【惩罚】被挠痒痒30秒', '从背后抱对方1分钟', '亲吻对方额头'
+// Card images by category (romantic/intimate couple images from unsplash)
+const cardImages: Record<string, string[]> = {
+  lover: [
+    'https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?w=600&h=800&fit=crop',
+    'https://images.unsplash.com/photo-1522673607200-164d1b6ce24e?w=600&h=800&fit=crop',
+    'https://images.unsplash.com/photo-1544723795-3fb1671e6d7e?w=600&h=800&fit=crop',
+    'https://images.unsplash.com/photo-1518199266791-5375a85190c7?w=600&h=800&fit=crop'
   ],
-  lover1: [
-    '轻轻的在对方耳朵边吹气10下', '在镜子前拥吻', '依次亲吻对方脸脖子锁骨', '躺下给对方按摩1分钟', '将对方压在身下做十个俯卧撑', '两人钻进被窝里亲亲',
-    '双方对视20秒', '当天一起洗澡', '撅起PP，让对方打10下', '轻轻抚摸对方下面30秒', '互相拥抱1分钟，并且抚摸对方PP', '男生公主抱女生，并坚持15秒',
-    '闭上眼睛让对方为所欲为1分钟', '亲吻对方的脸颊', '与对方舌吻30秒', '轻揉对方PP', '脱掉对方指定的衣服', '轻轻抚摸对方xiong30秒', '和对方法式湿吻20秒',
-    '脱掉一件衣服', '单膝下跪亲吻对方的手', '抚摸对方的大腿30秒', '亲亲对方xiong30秒', '背对对方扭动屁股', '买一个情趣用品', '什么都不做', '脱掉一件衣服',
-    '轻舔对方的耳垂10秒钟', '用冰块在对方身上轻轻滑动，直到溶化', '给对方一个轻柔的脚部按摩，持续2分钟', '展示一种性感的舞蹈，持续1分钟',
-    '用丝巾或眼罩绑住对方的眼睛，进行一个感官探索游戏', '一起观看一部情色电影或阅读一本情趣小说，然后聊聊感受', '制作一个属于你们两人的性爱指南，包括喜好、愿望和界限',
-    '在户外找一个安静的地方，亲吻对方的全身，同时享受大自然的美景', '使用食物进行亲吻和舔舐，例如巧克力酱或生果', '和对方一起尝试新的性爱姿势或技巧，寻找新的刺激',
-    '用舌尖轻轻刺激对方耳朵', '轻轻咬住对方的耳垂', '为对方做一个放松的肩部按摩', '温柔抚摸对方下体30秒，给予快感', '闭上眼睛，让对方为你做任何事情一分钟',
-    '轻轻揉捏对方的PP', '根据对方指定，脱掉任意一件衣服', '温柔地抚摸对方的胸部30秒', '双方一起尝试一种新的XO姿势', '相互用手掌轻轻触摸对方的敏感部位',
-    '用冰块在对方身上滑动30秒', '用口红在对方身上写下甜蜜的留言', '穿上情趣内衣，给对方一个私密的时刻表演', '为对方唱一首歌或朗诵一段情诗',
-    '模仿对方的声音和样子，玩起角色扮演游戏', '在阳台或花园里裸露一会儿，享受自然的触感', '本局比赛结束前用眼罩绑住眼睛'
-  ],
-  sex0: [
-    '脱掉对方一条内裤', '舔对方耳朵10秒', '给对方按摩小腿', '【福利】躺下对方给你按摩一分钟', '和对方深情接吻30秒', '挠痒痒到对方求饶为止，至少10秒',
-    '脱掉对方一件衣服', '脱掉对方的所有衣服', '挑逗对方敏感部位15秒', '被对方伸到内衣内抓胸10秒', '女方被男方公主抱在房内绕一圈', '把酒水或酸奶倒在自己身上对方舔干',
-    '自拍一段接吻小视频', '喝交杯酒并拍照', '脱光衣服', '用嘴吸吮对方手指10秒', '对方舔你上半身的各个部位超过30秒', '自己趴着对方舔你后背20秒',
-    '吸吮对方xiong20秒', '和对方湿吻10秒', '亲吻对方大腿内侧10秒', '脱光衣服', '将对方捆住双手直到惩罚结束', '摸对方xiong或打屁股一下',
-    '被对方手伸进裤子随便摸10秒', '【福利】对方口你下面30秒', '揉对方nai一下', '舔对方脖子到胸口30秒', '舔或轻咬对方耳垂5下', '跪舔对方30秒',
-    '【福利】躺下享受被对方舔遍全身1分钟', '想尽办法弄对方勃起或流水'
-  ],
-  sex1: [
-    '帮对手含住蛋蛋或阴蒂10秒舌头打转', '【惩罚】撅起PP让对方打3下', '【福利】对方给你口指定部位一分钟', '涂上油胸对胸帮对手推胸30秒', '舔对手的丝足或手指10秒',
-    '脱光衣服[或穿情趣内衣]', '和对手湿吻10秒', '吸吮对方手指10秒', '女穿情超内衣,男舔对方后背1分钟', '被对手用牙齿咬住乳头磨蹭10秒',
-    '【福利】对方含着水在你身上亲吻30秒', '用嘴含住对手蛋蛋或阴蒂10秒', '从背后伸手过来揉胸30秒', '后入抽搐20次不许射', '跟对方乳交30秒',
-    '被对方用牙齿咬住乳头磨蹭10秒', '将酸奶倒在对方乳头并舔干净吃掉', '揉对方胸3下或轻咬对方耳垂5下', '想尽办法弄对手勃起或流水', '后入插入20次并拍视频留念',
-    '拍一段给对方口的视频15秒', '男方站立抱起女方悬空插入20次不许射', '对着镜子拍揉胸视频10秒', '用胸或JJ蹭对方的脸10秒', '舔对方的脖子到胸30秒',
-    '观音坐莲30秒运动不许射', '【福利】对方舔你身上的各个部位1分钟', '【福利】对手帮你舔全身各个部位2分钟', '用嘴含住对手蛋蛋或阴蒂30秒',
-    '被对手用JJ打脸3下或B蹭脸10秒', '用手扣自己下面1分钟或lu30下', '口含热水给对手进行口30秒', '拍一段和对方爱爱的视频', '口含冰水或冰块给对手进行口30秒',
-    '对方站着自己跪着帮他（她）口1分钟', '后入抽插20次不许射'
-  ],
-  sex2: [
-    '和对方舌吻10秒', '把对方弄硬或弄湿', '舔对手的脖子到胸30秒', '【惩罚】对方背对着坐到身上直到游戏结束', '给对方口交15秒', '脱光', '吸咬对方的乳头20秒',
-    '【福利】对方用嘴给你投食', '拍一张给对方口交的照片', '边打电话给父母边做爱', '用嘴含住对方的蛋蛋或阴蒂10秒', '后入抽插20次不许射', '揉一下对方的胸或揪一下',
-    '跟对方乳交半分钟', '对方站着自己跪着帮他（她）口10秒', '将酸奶倒在对方乳头上舔干净吃掉', '被对方拔一根毛', '像口交一样吸吮对方手指10秒', '打开门在门口口交10秒',
-    '对着镜子拍揉胸视频10秒', '用奶或JJ蹭对方的脸10秒', '用嘴含住对方的蛋蛋或阴蒂10秒', '舔对方的脖子到胸30秒', '被对方用脚踩胸或蛋蛋10秒', '和对方舌吻半分钟',
-    '对方站着自己跪着帮他（她）口10秒', '用嘴含住对方的蛋蛋或阴蒂半分钟', '吸咬对方的乳头30秒', '对着镜子后入一分钟，不许射', '对方站着自己跪着帮他（她）口一分钟',
-    '从额头一直往下舔到脚趾', '对手从大腿根部倒水你接着喝光', '指定身上任意位置让对方舔20秒', '戴上眼罩享受对方舔任意部位一分钟'
+  sex: [
+    'https://images.unsplash.com/photo-1552374196-c4e7ff6e1d0a?w=600&h=800&fit=crop',
+    'https://images.unsplash.com/photo-1582725703362-c1f8983b6b86?w=600&h=800&fit=crop'
   ],
   sm: [
-    '脱光衣服趴在地方叫对方爸爸/妈妈', '在阳台或花园里裸露一会儿，享受自然的触感', '舔对手的脚30秒', '【惩罚】肛门塞上肛塞直到游戏结束', '舔对方屁眼15秒', '脱光',
-    '吸咬对方的乳头20秒', '【福利】对方喝您的尿', '拍一张给对方口交的照片', '边打电话给父母边做爱', '用嘴含住对方的蛋蛋或阴蒂30秒',
-    '让你的小狗真空出去买避孕套', '打对方的屁股，打红为止', '边打电话给父母边做爱', '【惩罚】全程带着眼罩直到游戏结束', '将酸奶倒在对方乳头上舔干净吃掉',
-    '喝她/他的尿', '像口交一样吸吮对方手指10秒', '男用棒棒糖抽插后再舔食反复五次', '对着镜子拍揉胸视频10秒', '在阴道中倒满啤酒/白水供男主引用',
-    '用嘴含住对方的蛋蛋或阴蒂10秒', '【惩罚】把您的裸体发给作者', '被对方用脚踩胸或蛋蛋10秒', '和对方舌吻半分钟', '对方站着自己跪着帮他（她）口10秒',
-    '舔对手的脚30秒', '在阳台或花园里裸露一会儿，享受自然的触感', '用捆绳捆住TA用皮鞭抽15秒', '对方站着自己跪着帮他（她）口一分钟', '去楼道里尽情做爱吧',
-    '趴着撅屁股男主快慢深浅不断变化的任意抽插', '被男主暴力揉搓乳房并用两指夹住乳头使劲揪', '趴在地上学狗叫', '戴上眼罩享受对方舔任意部位一分钟'
+    'https://images.unsplash.com/photo-1573446784990-6a1ae8c0ab9d?w=600&h=800&fit=crop',
+    'https://images.unsplash.com/photo-1544161515d1-c1e6e4c1b4e1?w=600&h=800&fit=crop'
   ],
-  huwai: [
-    '去楼道里尽情做爱吧', '在阳台或花园里裸露一会儿，享受自然的触感', '边打电话给父母边做爱', '让你的小狗真空出去买避孕套', '去楼下拍个户外写真照吧',
-    '【惩罚】所有户外活动全程佩戴跳蛋直到游戏结束', '让他/她牵着您去外面遛一遛', '去楼道里尽情做爱吧', '脱光衣服趴在地方叫对方爸爸/妈妈', '去楼道里尽情做爱吧',
-    '边打电话给父母边做爱', '像口交一样吸吮对方手指', '车震要不要体验一下', '去电梯里面露出', '去超市买东西并露出', '去楼道里尽情做爱吧',
-    '【福利】对方在外面叫你爸爸/妈妈', '【惩罚】把您的裸体发给作者', '拍一张给对方口交的照片', '对着阳台后入一分钟，不许射', '真空逛超市',
-    '让女方穿上黑丝与高跟去加一个异性微信', '屁股上写上您是肉便器', '对方站着自己跪着帮他（她）口一分钟', '去楼道里尽情做爱吧',
-    '脱光衣服趴在地方叫对方爸爸/妈妈', '舔对手的脚30秒', '【惩罚】把您的裸体发给作者', '将酸奶倒在对方乳头上舔干净吃掉', '让你的小狗真空出去买避孕套',
-    '让男方给他的异性朋友表白', '让他/她牵着您去外面遛一遛'
-  ],
-  nvpu: [
-    '为男主捏肩捶背并不断吸吮男主耳垂', '帮男主从拉链处掏出JJ用舌尖刺激', '竖起男主JJ用私处为JJ做360度环绕按摩', '跪着双手拷背后为男主忘我的kou交并拍视频', '跪着双手拷背后被男主疯狂的抽插嘴巴一分钟',
-    '被牵狗绳趴着为男主舔JJ舔不好就被狠抽皮鞭', '自己扒开蜜穴后被男主用黄瓜疯狂抽插', '阴蒂被男主用嘴巴嘬住不放两分钟并不停舌舔', '不断变化姿势让男主拍10张露yin道做手机壁纸',
-    '男主JJ上涂番茄酱让女仆舔食干净反复数次', '被男主后抱亲吻，左手捏熊右手抚摸抽插蜜穴', '为男主跳脱衣热舞掀衣让男主亲吻揉捏乳房',
-    '一起洗澡，并给对方打上沐浴露，游戏结束前不准洗', '激烈反抗后被男主强奸，为了不吃亏把男主强奸', '双手涂油变换各种手势为男主JJ做精致SPA',
-    '自摸胸部并扣模蜜穴说我好寂寞被男主拍视频', '女仆用阴道吞下JJ收紧阴道为男主反复拔罐', '被男主用色戒的姿势抽插一分钟', '趴跪被男主双手抓胳膊用JJ爆菊花一分钟', '',
-    '被男主再下体塞跳跳糖后猛烈抽插30秒', '不断舌舔吸撸舌头打转让男主高潮口射并吞精', '男生躺在地上，女生蹲在男脸上让男观看15秒（禁止触摸）', '撅腚剥开蜜穴自摸阴蒂求男主CAO死自己算了', '被疯狂吸吮乳头并被男主伸进内裤用手指抽插',
-    '在阴道中倒满啤酒/白水供男主引用', '再淋浴房开着淋浴帮男主kou交', '用双乳为男主推油按摩背部和臀部至男主满意', '趴跪着被男主不断猛烈插入抽出数次至求饶为止', '被男主暴力揉搓乳房并用两指夹住乳头使劲揪'
-  ],
-  nanpu: [
-    '女主私处上涂番茄酱让男仆舔食干净反复数次', '被女王一边亲吻，一边用手隔着衣服抚摸男仆私处', '被女王一只手托起下巴欣赏，另一只手伸进裤子把玩男仆JJ和蛋蛋',
-    '坐男仆身上抚摸胸部并掀起BRA用乳头碰他鼻尖挑逗', '在男仆屁股上写某某的男仆让其撅屁股抓住JJ拍照留念', '命男仆用JJ捶背两分钟', '用gui头为女王胸部按摩两分钟',
-    '胸部涂抹酸奶让男仆舔干净', '命令男仆紫薇打飞机', '命令男仆用JJ蘸番茄酱喂女王吃', '掀起内衣命令男仆亲吻胸部，同时扭动屁股摩擦男仆私处',
-    '男含女阴蒂吸吮直到女生喊停', '听女王喊口令（1、2、1）时快时慢男仆按节奏抽插', '想尽办法弄对方勃起或流水', '女王把棒棒糖塞入私处让男仆舌舔',
-    '男仆为女王做背部推油并JJ涂油为阴道推油', '命男仆快速抽插拨出射在胸部涂抹均匀为胸部做jing液SPA', '女王撅起屁股手拍屁股对男仆说：是男人就把我CAO死',
-    '男仆带眼罩为女王丰fang按摩两分钟', '女王剥跟香蕉反复紫薇后喂男仆吃掉', '在男仆勃起的JJ上写上女王名字问男仆这是谁的', '男仆抽插时双腿交叉着收紧阴道口', '让男仆舌头围阴蒂打转一分钟吸住阴蒂舌舔一分钟',
-    '命男仆亲吻脖颈部和酥胸同时掏出男仆JJ把玩', '命男仆跳劲爆脱衣舞，拖到只剩内裤后被女王使劲捏蛋蛋和JJ', '用脉动瓶子给男仆紫薇，JJ涂油全部塞入瓶内', '命男仆内射再让其口交把淌出来的jing液舔干净', '骑男仆背上喊驾驾驾，用皮鞭抽腚演骑马游戏', '命男仆隔着内裤舌舔亲吻私处', '王用手紫薇后让男仆吸吮手指反复多次', '命男仆用龟头不停摩擦阴蒂和阴道三分钟（禁止进入）', '让男仆JJ在外阴摩擦三次然后内插一次，循环往复20次'
+  default: [
+    'https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?w=600&h=800&fit=crop'
   ]
 }
 
-const currentTasks = computed(() => {
-  return tasks[currentVersionId.value] || tasks.lover0
+const currentImage = computed(() => {
+  const category = currentVersion.value?.category || 'lover'
+  const images = cardImages[category] || cardImages.default
+  const index = currentCardIndex.value % images.length
+  return images[index]
 })
 
-const currentTask = computed(() => {
-  const versionTasks = currentTasks.value
-  return versionTasks[cardIndex.value % versionTasks.length]
-})
-
-function flipCard() {
-  isFlipped.value = !isFlipped.value
-  if (isFlipped.value) {
-    cardIndex.value = Math.floor(Math.random() * currentTasks.value.length)
+function handleCardClick() {
+  if (!isFlipped.value) {
+    flipCard()
+  } else {
+    nextCard()
   }
-}
-
-function resetCard() {
-  isFlipped.value = false
-}
-
-function selectVersion(id: string) {
-  const ver = versions.find(v => v.id === id)
-  if (ver?.locked && !isVip) {
-    return
-  }
-  currentVersionId.value = id
-  isFlipped.value = false
-  cardIndex.value = 0
 }
 </script>
 
 <style scoped>
 .page-header {
-  padding: 40px 20px;
+  padding: 40px 20px 20px;
   text-align: center;
-  background: var(--theme-gradient);
-  color: white;
+  background: linear-gradient(180deg, var(--background-secondary) 0%, var(--background) 100%);
 }
 
 .page-header h1 {
-  font-size: 2rem;
-  font-weight: 700;
+  font-size: 2.5rem;
+  font-weight: 900;
+  background: var(--theme-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   margin-bottom: 8px;
 }
 
 .page-header p {
-  opacity: 0.9;
+  color: var(--text-light);
+  font-size: 1rem;
 }
 
 .card-section {
-  padding: 40px 20px;
+  padding: 20px;
 }
 
 .version-selector {
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  margin-bottom: 32px;
+  margin-bottom: 30px;
 }
 
 .version-scroll {
   display: flex;
   gap: 12px;
-  padding-bottom: 8px;
-  justify-content: center;
-  flex-wrap: wrap;
+  overflow-x: auto;
+  padding: 10px 0;
+  -webkit-overflow-scrolling: touch;
+}
+
+.version-scroll::-webkit-scrollbar {
+  display: none;
 }
 
 .version-chip {
   flex-shrink: 0;
   padding: 10px 20px;
+  border-radius: 30px;
+  border: 2px solid var(--card-border);
   background: var(--card-bg);
-  border: 1px solid var(--card-border);
-  border-radius: var(--theme-border-radius);
-  font-size: 0.9rem;
   color: var(--text);
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
-.version-chip:hover:not(:disabled) {
+.version-chip:hover {
   border-color: var(--primary);
+  transform: translateY(-2px);
 }
 
 .version-chip.active {
   background: var(--theme-gradient);
-  color: white;
   border-color: transparent;
+  color: white;
 }
 
 .version-chip.locked {
   opacity: 0.6;
 }
 
-.lock-icon {
-  margin-left: 4px;
+.version-chip .lock-icon {
+  display: flex;
+  color: var(--text-light);
 }
 
 .card-area {
   display: flex;
   justify-content: center;
-  padding: 20px 0;
+  margin-bottom: 30px;
 }
 
 .flip-card {
-  width: 280px;
-  height: 400px;
+  width: 300px;
+  height: 420px;
   perspective: 1000px;
   cursor: pointer;
 }
 
 .flip-card-inner {
+  position: relative;
   width: 100%;
   height: 100%;
-  position: relative;
+  transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   transform-style: preserve-3d;
-  transition: transform 0.6s;
 }
 
 .flip-card.flipped .flip-card-inner {
@@ -312,125 +255,179 @@ function selectVersion(id: string) {
   width: 100%;
   height: 100%;
   backface-visibility: hidden;
-  border-radius: var(--theme-border-radius);
+  border-radius: 24px;
+  overflow: hidden;
   box-shadow: var(--theme-shadow);
+}
+
+.flip-card-front {
+  background: linear-gradient(145deg, rgba(45, 20, 20, 0.95) 0%, rgba(30, 10, 10, 0.98) 100%);
+  border: 2px solid var(--card-border);
+}
+
+.flip-card-front-content {
+  position: relative;
+  z-index: 1;
+  height: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 24px;
-  text-align: center;
-}
-
-.flip-card-front {
-  background: linear-gradient(135deg, #e74c3c, #ff6b6b);
-  color: white;
+  padding: 30px;
+  background: linear-gradient(180deg, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.7) 100%);
 }
 
 .flip-card-front-icon {
-  margin-bottom: 16px;
-  animation: float 2s ease-in-out infinite;
+  color: var(--primary);
+  margin-bottom: 20px;
+  animation: pulse 2s infinite;
 }
 
-@keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
+@keyframes pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.1); opacity: 0.8; }
 }
 
 .flip-card-front-text {
-  font-size: 1.2rem;
+  color: white;
+  font-size: 1.3rem;
+  font-weight: 700;
+  text-align: center;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+}
+
+.version-badge {
+  position: absolute;
+  bottom: 20px;
+  padding: 6px 16px;
+  background: var(--theme-gradient);
+  border-radius: 20px;
+  color: white;
+  font-size: 0.85rem;
   font-weight: 600;
 }
 
 .flip-card-back {
-  background: var(--card-bg);
   transform: rotateY(180deg);
-  border: 2px solid var(--card-border);
+  background: linear-gradient(145deg, rgba(45, 20, 20, 0.98) 0%, rgba(20, 10, 10, 0.99) 100%);
+  border: 2px solid var(--primary);
+  display: flex;
+  flex-direction: column;
 }
 
 .flip-card-back-content {
-  writing-mode: vertical-rl;
-  font-size: 1.6rem;
-  font-weight: 700;
-  color: var(--primary);
-  letter-spacing: 2px;
-  line-height: 1.8;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 30px;
+  position: relative;
+  z-index: 1;
+}
+
+.task-text {
+  color: white;
+  font-size: 1.4rem;
+  font-weight: 600;
+  text-align: center;
+  line-height: 1.6;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+}
+
+.card-footer {
+  padding: 15px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(0,0,0,0.4);
+  border-top: 1px solid rgba(255,255,255,0.1);
 }
 
 .card-id {
-  position: absolute;
-  bottom: 16px;
-  right: 16px;
-  font-size: 0.8rem;
   color: var(--text-light);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.vip-tag {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #ffd700;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.card-bg-image {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  opacity: 0.4;
+}
+
+.card-bg-image.blur {
+  filter: blur(20px);
+  transform: scale(1.1);
 }
 
 .action-buttons {
   display: flex;
   gap: 16px;
   justify-content: center;
-  margin-top: 32px;
 }
 
 .action-btn {
-  padding: 12px 24px;
-  border-radius: var(--theme-border-radius);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 28px;
+  border-radius: 30px;
   font-size: 1rem;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
   transition: all 0.3s;
   border: none;
 }
 
-.action-btn-primary {
-  background: linear-gradient(135deg, #e74c3c, #ff6b6b);
-  color: white;
-  box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
-}
-
-.action-btn-primary:hover {
-  transform: scale(1.05);
-}
-
 .action-btn-secondary {
   background: var(--card-bg);
   color: var(--text);
-  border: 1px solid var(--card-border);
+  border: 2px solid var(--card-border);
 }
 
 .action-btn-secondary:hover {
   border-color: var(--primary);
-  color: var(--primary);
+  transform: translateY(-2px);
+}
+
+.action-btn-primary {
+  background: var(--theme-gradient);
+  color: white;
+  box-shadow: 0 4px 15px rgba(var(--primary-rgb), 0.3);
+}
+
+.action-btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(var(--primary-rgb), 0.4);
 }
 
 .rules-section {
-  padding: 24px 20px;
+  padding: 40px 20px;
+  text-align: center;
   background: var(--background-secondary);
+  margin-top: 40px;
 }
 
 .rules-title {
-  font-size: 1.1rem;
-  font-weight: 600;
+  font-size: 1.2rem;
+  font-weight: 700;
   color: var(--text);
   margin-bottom: 12px;
-  text-align: center;
 }
 
 .rules-text {
-  font-size: 0.9rem;
   color: var(--text-light);
   line-height: 1.8;
-  text-align: center;
-}
-
-@media (max-width: 480px) {
-  .flip-card {
-    width: 240px;
-    height: 340px;
-  }
-
-  .flip-card-back-content {
-    font-size: 1.2rem;
-  }
 }
 </style>
